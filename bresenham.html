@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plano Cartesiano</title>
+    <style>
+      body {
+        display: flex;
+        height: 100vh;
+        margin: 0;
+        background-color: #f4f4f4;
+        font-family: Arial, sans-serif;
+      }
+      .sidebar {
+        width: 280px;
+        background: white;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        border-right: 2px solid #ccc;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .sidebar input {
+        width: 90%;
+        padding: 8px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .sidebar button {
+        width: 96%;
+        padding: 10px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+      .sidebar button:hover {
+        background-color: #0056b3;
+      }
+      .main-content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        flex-direction: column;
+      }
+      canvas {
+        background-color: white;
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <h2>Configurações</h2>
+      <label>Valor de x1:</label>
+      <input type="number" id="x1" value="10" placeholder="X1" />
+      <label>Valor de y1:</label>
+      <input type="number" id="y1" value="10" placeholder="Y1" />
+      <label>Valor de x2:</label>
+      <input type="number" id="x2" value="50" placeholder="X2" />
+      <label>Valor de y2:</label>
+      <input type="number" id="y2" value="50" placeholder="Y2" />
+      <button onclick="drawLine()">Desenhar Reta</button>
+      <br />
+
+      <label>Largura da janela:</label>
+      <input
+        type="number"
+        id="width"
+        value="500"
+        min="100"
+        max="1000"
+        placeholder="Valor em pixels"
+      />
+      <label>Altura da janela:</label>
+      <input
+        type="number"
+        id="height"
+        value="500"
+        min="100"
+        max="620"
+        placeholder="Valor em pixels"
+      />
+      <button onclick="updateCanva()">Atualizar janela</button>
+    </div>
+    <div class="main-content">
+      <canvas id="canvas" height="500" width="500"></canvas>
+    </div>
+    <script>
+      let canva_width = 500;
+      let canva_height = 500;
+
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Função para atualizar o canvas
+      function updateCanva() {
+        let largura = parseInt(document.getElementById("width").value);
+        let altura = parseInt(document.getElementById("height").value);
+
+        if (!isNaN(largura) && !isNaN(altura)) {
+          largura = Math.min(Math.max(largura, 100), 1000);
+          altura = Math.min(Math.max(altura, 100), 620);
+
+          canvas.width = largura;
+          canvas.height = altura;
+        } else {
+          alert("Preencha os valores corretamente.");
+        }
+        drawAxis();
+      }
+
+      function drawAxis() {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(centerX, 0);
+        ctx.lineTo(centerX, canvas.height);
+        ctx.moveTo(0, centerY);
+        ctx.lineTo(canvas.width, centerY);
+        ctx.stroke();
+      }
+
+      function setPixel(x, y) {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        ctx.fillStyle = "red";
+        ctx.fillRect(centerX + x, centerY - y, 1, 1);
+      }
+
+      function drawLine() {
+        updateCanva();
+        let x1 = parseInt(document.getElementById("x1").value);
+        let y1 = parseInt(document.getElementById("y1").value);
+        let x2 = parseInt(document.getElementById("x2").value);
+        let y2 = parseInt(document.getElementById("y2").value);
+
+        if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
+          alert("Preencha todos os campos corretamente.");
+          return;
+        }
+
+        let dx = Math.abs(x2 - x1);
+        let dy = Math.abs(y2 - y1);
+
+        let sx = x1 < x2 ? 1 : -1;
+        let sy = y1 < y2 ? 1 : -1;
+
+        let err = dx - dy;
+
+        while (true) {
+          setPixel(x1, y1);
+
+          if (x1 === x2 && y1 === y2) break;
+
+          let e2 = 2 * err;
+          if (e2 > -dy) {
+            err -= dy;
+            x1 += sx;
+          }
+          if (e2 < dx) {
+            err += dx;
+            y1 += sy;
+          }
+        }
+      }
+
+      drawAxis();
+    </script>
+  </body>
+</html>
