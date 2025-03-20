@@ -52,25 +52,13 @@
         flex-direction: column;
       }
       canvas {
-        background-color: rgb(0, 0, 0);
-        border: 1px solid rgb(255, 255, 255);
+        border: 1px solid #ccc;
       }
     </style>
   </head>
   <body>
     <div class="sidebar">
       <h2>Configurações</h2>
-      <label>Valor de x1:</label>
-      <input type="number" id="x1" value="10" placeholder="X1" />
-      <label>Valor de y1:</label>
-      <input type="number" id="y1" value="10" placeholder="Y1" />
-      <label>Valor de x2:</label>
-      <input type="number" id="x2" value="50" placeholder="X2" />
-      <label>Valor de y2:</label>
-      <input type="number" id="y2" value="90" placeholder="Y2" />
-      <button onclick="drawLine()">Desenhar Reta</button>
-      <br />
-
       <label>Largura da janela:</label>
       <input
         type="number"
@@ -89,8 +77,53 @@
         max="620"
         placeholder="Valor em pixels"
       />
+      <label>Cor de fundo:</label>
+      <select id="backgroundColor">
+        <option value="black">Preto</option>
+        <option value="white">Branco</option>
+      </select>
       <button onclick="updateCanva()">Atualizar janela</button>
       <button onclick="clearCanvas()">Limpar</button>
+
+      <h2>Figuras</h2>
+      <select id="figureSelect" onchange="changeFigure()">
+        <option value="line">Reta</option>
+        <option value="circle">Círculo</option>
+      </select>
+
+      <div id="lineParams">
+        <label>Valor de x1:</label>
+        <input type="number" id="x1" value="10" placeholder="X1" />
+        <label>Valor de y1:</label>
+        <input type="number" id="y1" value="10" placeholder="Y1" />
+        <label>Valor de x2:</label>
+        <input type="number" id="x2" value="50" placeholder="X2" />
+        <label>Valor de y2:</label>
+        <input type="number" id="y2" value="90" placeholder="Y2" />
+        <label>Algoritmo:</label>
+        <select id="lineAlgorithm">
+          <option value="dda">DDA</option>
+          <option value="bresenham">Bresenham</option>
+          <option value="bresenham2">Bresenham 1º e 2º oitante</option>
+        </select>
+        <button onclick="drawFigure()">Desenhar Reta</button>
+      </div>
+
+      <div id="circleParams" style="display: none">
+        <label>Centro x:</label>
+        <input type="number" id="cx" value="0" placeholder="CX" />
+        <label>Centro y:</label>
+        <input type="number" id="cy" value="0" placeholder="CY" />
+        <label>Raio:</label>
+        <input type="number" id="radius" value="50" placeholder="Raio" />
+        <label>Algoritmo:</label>
+        <select id="circleAlgorithm">
+          <option value="midpoint">Ponto Médio</option>
+          <option value="equation">Equação da Circunferência</option>
+          <option value="trigonometric">Trigonométrico</option>
+        </select>
+        <button onclick="drawFigure()">Desenhar Círculo</button>
+      </div>
     </div>
     <div class="main-content">
       <canvas id="canvas" height="500" width="500"></canvas>
@@ -105,6 +138,8 @@
       function updateCanva() {
         let largura = parseInt(document.getElementById("width").value);
         let altura = parseInt(document.getElementById("height").value);
+        const backgroundColor =
+          document.getElementById("backgroundColor").value;
 
         if (!isNaN(largura) && !isNaN(altura)) {
           largura = Math.min(Math.max(largura, 100), 1000);
@@ -112,6 +147,7 @@
 
           canvas.width = largura;
           canvas.height = altura;
+          canvas.style.backgroundColor = backgroundColor;
         } else {
           alert("Preencha os valores corretamente.");
         }
@@ -121,7 +157,8 @@
       function drawAxis() {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        ctx.strokeStyle = "white";
+        ctx.strokeStyle =
+          canvas.style.backgroundColor === "black" ? "white" : "black";
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(centerX, 0);
@@ -143,97 +180,209 @@
         drawAxis();
       }
 
-      function inc_Line(x0, y0, x1, y1) {
-        let [x, y] = [x0, y0];
+      function changeFigure() {
+        const figure = document.getElementById("figureSelect").value;
+        document.getElementById("lineParams").style.display =
+          figure === "line" ? "block" : "none";
+        document.getElementById("circleParams").style.display =
+          figure === "circle" ? "block" : "none";
+      }
 
-        // Define a direção dos incrementos. Se x1 > x0, incrementa x; se x1 < x0, decrementa x.
-        // A mesma lógica se aplica para y.
-        let incX = x1 > x0 ? 1 : x1 < x0 ? -1 : 0;
-        let incY = y1 > y0 ? 1 : y1 < y0 ? -1 : 0;
+      // Algoritmo DDA para desenhar retas
+      function LineDDA(x0, y0, x1, y1) {
+        const dx = x1 - x0;
+        const dy = y1 - y0;
+        const steps = Math.max(Math.abs(dx), Math.abs(dy));
 
-        // dx e dy representam as diferenças absolutas entre os valores de x e y
-        let dx = Math.abs(x1 - x0);
-        let dy = Math.abs(y1 - y0);
+        const xIncrement = dx / steps;
+        const yIncrement = dy / steps;
 
-        // 'steep' indica se a linha tem uma inclinação maior que 45º
-        let steep = false;
+        let x = x0;
+        let y = y0;
 
-        // Se a linha for íngreme (dy > dx), inverte as variáveis de coordenadas e ajustes para a linha ser desenhada corretamente.
-        if (dy > dx) {
-          steep = true;
-          [x, y] = [y, x]; // Inverte x e y para manipulação de inclinações grandes
-          [dx, dy] = [dy, dx]; // Troca dx e dy
-          [incX, incY] = [incY, incX]; // Troca incX e incY
+        for (let i = 0; i < steps; i++) {
+          x += xIncrement;
+          y += yIncrement;
+          setPixel(Math.round(x), Math.round(y));
         }
+      }
 
-        // Inicialização de 'p' com a fórmula modificada: dx - 2 * dy.
-        // Esse valor de 'p' controla o deslocamento na linha.
-        let p = dx - 2 * dy; // (versão modificada) na versão original seria '2 * dy - dx'
-        // A fórmula p = dx - 2 * dy é mais simples e eficiente, aplicando-se a todos os casos
-        // de linhas, sem necessidade de distinção entre inclinação moderada e íngreme. Ela reduz
-        // a complexidade e melhora a legibilidade do código.
+      // Algoritmo de Bresenham para desenhar retas (|m| < 1.0)
+      function LineBresenham(x0, y0, x1, y1) {
+        const dx = Math.abs(x1 - x0);
+        const dy = Math.abs(y1 - y0);
+        const sx = x0 < x1 ? 1 : -1; // Direção de x
+        const sy = y0 < y1 ? 1 : -1; // Direção de y
+        let err = dx - dy;
 
-        const pontos = [];
+        while (true) {
+          setPixel(x0, y0);
 
-        // Adiciona o ponto inicial na lista de pontos, considerando se a linha é íngreme ou não.
-        // Sendo assim, se necessária é realizada a inversão de pontos.
-        if (steep) {
-          pontos.push([y, x]);
+          if (x0 === x1 && y0 === y1) break;
+
+          const e2 = 2 * err;
+          if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+          }
+          if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+          }
+        }
+      }
+
+      function LineBresenham_1_2_OCT(x1, y1, x2, y2) {
+        const dx = x2 - x1; // Diferença dos x
+        const dy = y2 - y1; // Diferença dos y
+
+        if (dy < dx) {
+          // Procedimento Bresenham line-drawning para |m| < 1.0 (1º Oitante)
+          let ds = 2 * dy - dx; // Valor inicial de d
+
+          const incE = 2 * dy; // Incremento de E
+          const incNE = 2 * (dy - dx); // Incremento de NE
+
+          let x = x1;
+          let y = y1;
+
+          let count = 0;
+
+          setPixel(x, y); // Ativa o primeiro pixel
+
+          while (x < x2) {
+            if (ds <= 0) {
+              // Escolhe E
+              ds += incE;
+              x += 1;
+            } else {
+              // Escolhe NE
+              ds += incNE;
+              x += 1;
+              y += 1; // Direção da linha (cima ou baixo)
+            }
+
+            count++;
+
+            setPixel(x, y); // Ativa o pixel atual
+            
+          }
         } else {
-          pontos.push([x, y]);
-        }
+          // Procedimento Bresennham line-drawning para |m| >= 1.0 (2º Oitante)
+          let ds = 2 * dx - dy; // Valor inicial de d
 
-        let count = 1;
-        while (count <= dx) {
-          // (versão modificada)
+          const incE = 2 * dx; // Incremento de E
+          const incNE = 2 * (dx - dy); // Incremento de NE
 
-          if (p <= 0) {
-            y += incY; // Incrementa y (ou decrementa, dependendo de incY)
-            p += 2 * dx; // Incrementa p com '2 * dx'
+          let x = x1;
+          let y = y1;
+
+          let count = 0;
+
+          setPixel(x, y); // Ativa o primeiro pixel
+
+          while (y < y2) {
+            if (ds <= 0) {
+              // Escolhe E
+              ds += incE;
+              y += 1;
+            } else {
+              // Escolhe NE
+              ds += incNE;
+              y += 1;
+              x += 1; // Direção da linha (cima ou baixo)
+            }
+
+            count++;
+
+            setPixel(x, y); // Ativa o pixel atual
+            
           }
+        }
+      }
 
-          // Independente de p, incrementamos 'x' e ajustamos p com '- 2 * dy'
-          x += incX; // Incrementa x (ou decrementa, dependendo de incX)
-          p -= 2 * dy; // Decrementa p com '2 * dy'
+      function Line(x0, y0, x1, y1) {
+        const algorithm = document.getElementById("lineAlgorithm").value;
+        if (algorithm === "dda") {
+          LineDDA(x0, y0, x1, y1);
+        } else if (algorithm === "bresenham") {
+          LineBresenham(x0, y0, x1, y1);
+        } else if (algorithm === "bresenham2") {
+          LineBresenham_1_2_OCT(x0, y0, x1, y1);
+        }
+      }
 
-          // Adiciona o ponto atual à lista de pontos, considerando a inclinação da linha novamente.
-          if (steep) {
-            pontos.push([y, x]); // Troca as coordenadas se a linha for íngreme
+      // Algoritmo do Ponto Médio para Circunferência
+      function CircleMidpoint(cx, cy, radius) {
+        let x = 0;
+        let y = radius;
+        let d = 1 - radius;
+
+        while (y >= x) {
+          setPixel(x + cx, y + cy);
+          setPixel(y + cx, x + cy);
+          setPixel(-x + cx, y + cy);
+          setPixel(-y + cx, x + cy);
+          setPixel(-x + cx, -y + cy);
+          setPixel(-y + cx, -x + cy);
+          setPixel(x + cx, -y + cy);
+          setPixel(y + cx, -x + cy);
+
+          if (d < 0) {
+            d += 2 * x + 3;
           } else {
-            pontos.push([x, y]); // Caso contrário, usa-se a ordem padrão (x, y)
+            d += 2 * (x - y) + 5;
+            y--;
           }
-
-          // Incrementa o contador de iterações
-          count++;
+          x++;
         }
-
-        return pontos;
       }
 
-      function drawLine() {
-        updateCanva(); // Atualiza o canvas e redesenha os eixos
-
-        // Lê os pontos de início (x0, y0) e fim (x1, y1) dos inputs
-        let x0 = parseInt(document.getElementById("x1").value);
-        let y0 = parseInt(document.getElementById("y1").value);
-        let x1 = parseInt(document.getElementById("x2").value);
-        let y1 = parseInt(document.getElementById("y2").value);
-
-        if (isNaN(x0) || isNaN(y0) || isNaN(x1) || isNaN(y1)) {
-          alert("Preencha os campos corretamente.");
-          return;
+      function CircleEquation(cx, cy, radius) {
+        for (let x = -radius; x <= radius; x++) {
+          const y = Math.sqrt(radius * radius - x * x);
+          setPixel(x + cx, y + cy);
+          setPixel(x + cx, -y + cy);
         }
-
-        // Chama a função inc_Line para retornar os pontos da reta.
-        const pontos = inc_Line(x0, y0, x1, y1);
-
-        // Desenha os pontos calculados pela função
-        pontos.forEach((ponto) => {
-          setPixel(ponto[0], ponto[1]);
-        });
       }
 
-      drawAxis();
+      function CircleTrigonometric(cx, cy, radius) {
+        const steps = 100;
+        for (let i = 0; i < steps; i++) {
+          const angle = (2 * Math.PI * i) / steps;
+          const x = Math.round(radius * Math.cos(angle));
+          const y = Math.round(radius * Math.sin(angle));
+          setPixel(x + cx, y + cy);
+        }
+      }
+
+      function drawFigure() {
+        clearCanvas();
+        const figure = document.getElementById("figureSelect").value;
+
+        if (figure === "line") {
+          const x0 = parseInt(document.getElementById("x1").value);
+          const y0 = parseInt(document.getElementById("y1").value);
+          const x1 = parseInt(document.getElementById("x2").value);
+          const y1 = parseInt(document.getElementById("y2").value);
+          Line(x0, y0, x1, y1);
+        } else if (figure === "circle") {
+          const cx = parseInt(document.getElementById("cx").value);
+          const cy = parseInt(document.getElementById("cy").value);
+          const radius = parseInt(document.getElementById("radius").value);
+          const algorithm = document.getElementById("circleAlgorithm").value;
+
+          if (algorithm === "midpoint") {
+            CircleMidpoint(cx, cy, radius);
+          } else if (algorithm === "equation") {
+            CircleEquation(cx, cy, radius);
+          } else if (algorithm === "trigonometric") {
+            CircleTrigonometric(cx, cy, radius);
+          }
+        }
+      }
+
+      updateCanva(); // Inicializa o canvas com as configurações padrão
     </script>
   </body>
 </html>
