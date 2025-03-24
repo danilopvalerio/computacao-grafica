@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computação Gráfica</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Sidebar Esquerda: Configurações e Figuras -->
+    <div class="sidebar left-sidebar">
+        <h2>Configurações</h2>
+        
+        <!-- Configuração do Canvas -->
+        <label>Largura da janela:</label>
+        <input type="number" id="width" value="500" min="100" max="1000" placeholder="Valor em pixels">
+        
+        <label>Altura da janela:</label>
+        <input type="number" id="height" value="500" min="100" max="620" placeholder="Valor em pixels">
+        
+        <label>Cor de fundo:</label>
+        <select id="backgroundColor">
+            <option value="white">Branco</option>
+            <option value="black">Preto</option>
+        </select>
+
+        <button onclick="updateCanva()">Atualizar janela</button>
+        <button onclick="clearCanvas()">Limpar</button>
+
+        <h2>Figuras</h2>
+        <select id="figureSelect" onchange="changeFigure()">
+            <option value="line">Reta</option>
+            <option value="circle">Círculo</option>
+        </select>
+
+        <!-- Parâmetros para Reta -->
+        <div id="lineParams">
+            <label>Valor de x1:</label>
+            <input type="number" id="x1" value="10" placeholder="X1">
+            
+            <label>Valor de y1:</label>
+            <input type="number" id="y1" value="10" placeholder="Y1">
+            
+            <label>Valor de x2:</label>
+            <input type="number" id="x2" value="50" placeholder="X2">
+            
+            <label>Valor de y2:</label>
+            <input type="number" id="y2" value="90" placeholder="Y2">
+            
+            <label>Algoritmo:</label>
+            <select id="lineAlgorithm">
+                <option value="dda">DDA</option>
+                <option value="bresenham2">Bresenham 1 e 2 oitante</option>
+            </select>
+            
+            <button onclick="drawFigure()">Desenhar Reta</button>
+        </div>
+
+        <!-- Parâmetros para Círculo -->
+        <div id="circleParams" style="display: none">
+            <label>Centro x:</label>
+            <input type="number" id="cx" value="0" placeholder="CX">
+            
+            <label>Centro y:</label>
+            <input type="number" id="cy" value="0" placeholder="CY">
+            
+            <label>Raio:</label>
+            <input type="number" id="radius" value="50" placeholder="Raio">
+            
+            <label>Algoritmo:</label>
+            <select id="circleAlgorithm">
+                <option value="midpoint">Ponto Médio</option>
+                <option value="equation">Equação da Circunferência</option>
+                <option value="trigonometric">Trigonométrico</option>
+            </select>
+            
+            <button onclick="drawFigure()">Desenhar Círculo</button>
+        </div>
+    </div>
+
+    <!-- Área Principal: Canvas -->
+    <div class="main-content">
+        <canvas id="canvas" height="500" width="500"></canvas>
+    </div>
+
+    <!-- Sidebar Direita: Propriedades, Transformações e Histórico -->
+    <div class="sidebar right-sidebar">
+        
+        <!-- Configurações de Propriedades -->
+        <h2>Propriedades</h2>
+        
+        <label>Cor da linha:</label>
+        <input type="color" id="lineColor" value="#000000">
+        
+        <label>Espessura da linha:</label>
+        <input type="range" id="lineWidth" min="1" max="10" value="1">
+        
+        <!-- Transformações -->
+        <h2>Transformações</h2>
+        
+        <label>Translação X:</label>
+        <input type="number" id="translateX" value="0">
+        
+        <label>Translação Y:</label>
+        <input type="number" id="translateY" value="0">
+        
+        <label>Rotação (graus):</label>
+        <input type="number" id="rotation" value="0" min="0" max="360">
+        
+        <label>Escala:</label>
+        <input type="number" id="scale" value="1" step="0.1" min="0.1">
+        
+        <button onclick="applyTransformations(ctx)">Aplicar Transformações</button>
+        
+        <!-- Histórico -->
+        <h2>Histórico</h2>
+        <div id="historyList" class="history-list"></div>
+        <button onclick="clearHistory()">Limpar Histórico</button>
+    </div>
+
+    <!-- Scripts -->
+    <script  src="js/script.js"></script>
+    <script src="js/history.js"></script>
+    <script  src="js/transformations.js"></script>
+
+</body>
+</html>
