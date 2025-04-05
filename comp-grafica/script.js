@@ -101,26 +101,25 @@ function clearLog() {
     document.getElementById("iterationLog").innerHTML = "";
 }
   
-
 function LineDDA(x0, y0, x1, y1) {
-    //clearLog();
-    const dx = x1 - x0;
-    const dy = y1 - y0;
-    const steps = Math.max(Math.abs(dx), Math.abs(dy));
-    const xIncrement = dx / steps;
-    const yIncrement = dy / steps;
-    let x = x0;
-    let y = y0;
-  
-    for (let i = 0; i <= steps; i++) {
-      setPixel(Math.round(x), Math.round(y));
-      //logIteration(Math.round(x), Math.round(y), null, i);
-      x += xIncrement;
-      y += yIncrement;
-    }
+  clearLog();
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const steps = Math.max(Math.abs(dx), Math.abs(dy));
+  const xIncrement = dx / steps;
+  const yIncrement = dy / steps;
+  let x = x0;
+  let y = y0;
+
+  for (let i = 0; i <= steps; i++) {
+    setPixel(Math.round(x), Math.round(y));
+    logIteration(Math.round(x), Math.round(y), null, i);
+    x += xIncrement;
+    y += yIncrement;
+  }
 }
   
-  function LineBresenham(x1, y1, x2, y2) {
+function LineBresenham(x1, y1, x2, y2) {
     clearLog();
     const dx = x2 - x1;
     const dy = y2 - y1;
@@ -160,41 +159,41 @@ function LineDDA(x0, y0, x1, y1) {
         setPixel(x, y);
       }
     }
-  }
+}
   
-  function CircleMidpoint(cx, cy, radius) {
-    clearLog();
-    let x = 0;
-    let y = radius;
-    let d = 1 - radius;
-    
-    while (y >= x) {
-      setPixel(x + cx, y + cy);
-      logIteration(x + cx, y + cy, d);
-      setPixel(y + cx, x + cy);
-      logIteration(y + cx, x + cy, d);
-      setPixel(-x + cx, y + cy);
-      logIteration(-x + cx, y + cy, d);
-      setPixel(-y + cx, x + cy);
-      logIteration(-y + cx, x + cy, d);
-      setPixel(-x + cx, -y + cy);
-      logIteration(-x + cx, -y + cy, d);
-      setPixel(-y + cx, -x + cy);
-      logIteration(-y + cx, -x + cy, d);
-      setPixel(x + cx, -y + cy);
-      logIteration(x + cx, -y + cy, d);
-      setPixel(y + cx, -x + cy);
-      logIteration(y + cx, -x + cy, d);
+function CircleMidpoint(cx, cy, radius) {
+  clearLog();
+  let x = 0;
+  let y = radius;
+  let d = 1 - radius;
   
-      if (d < 0) {
-        d += 2 * x + 3;
-      } else {
-        d += 2 * (x - y) + 5;
-        y--;
-      }
-      x++;
+  while (y >= x) {
+    setPixel(x + cx, y + cy);
+    logIteration(x + cx, y + cy, d);
+    setPixel(y + cx, x + cy);
+    logIteration(y + cx, x + cy, d);
+    setPixel(-x + cx, y + cy);
+    logIteration(-x + cx, y + cy, d);
+    setPixel(-y + cx, x + cy);
+    logIteration(-y + cx, x + cy, d);
+    setPixel(-x + cx, -y + cy);
+    logIteration(-x + cx, -y + cy, d);
+    setPixel(-y + cx, -x + cy);
+    logIteration(-y + cx, -x + cy, d);
+    setPixel(x + cx, -y + cy);
+    logIteration(x + cx, -y + cy, d);
+    setPixel(y + cx, -x + cy);
+    logIteration(y + cx, -x + cy, d);
+
+    if (d < 0) {
+      d += 2 * x + 3;
+    } else {
+      d += 2 * (x - y) + 5;
+      y--;
     }
+    x++;
   }
+}
   
 function Line(x0, y0, x1, y1) {
   const algorithm = document.getElementById("lineAlgorithm").value;
@@ -204,8 +203,6 @@ function Line(x0, y0, x1, y1) {
     LineBresenham(x0, y0, x1, y1);
   }
 }
-
-
 
 function CircleEquation(cx, cy, radius) {
   for (let x = -radius; x <= radius; x++) {
@@ -225,55 +222,222 @@ function CircleTrigonometric(cx, cy, radius) {
   }
 }
 
- // Receber os pontos do quadrado e aplicar no desenho
-function drawSquare(size) {
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const halfSize = size / 2;
-  
-  // Pontos do quadrado (relativos ao centro)
-  const points = [
-      { x: -halfSize, y: -halfSize }, // canto superior esquerdo
-      { x: halfSize, y: -halfSize },  // canto superior direito
-      { x: halfSize, y: halfSize },   // canto inferior direito
-      { x: -halfSize, y: halfSize }   // canto inferior esquerdo
-  ];
-  
-  // Desenha as 4 linhas do quadrado
-  for (let i = 0; i < 4; i++) {
-      const next = (i + 1) % 4; // Conecta o último ponto ao primeiro
-      Line(points[i].x, points[i].y, points[next].x, points[next].y);
+let squarePoints = [];
+const getPoint = (id) => {
+  const val = document.getElementById(id).value.trim();
+  const match = val.match(/\(?\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*\)?/);
+  if (match) {
+    return {
+      x: parseFloat(match[1]),
+      y: parseFloat(match[3])
+    };
   }
+  return null;
+};
+
+ // Receber os pontos do quadrado e aplicar no desenho
+ function drawSquare() {
+  const lado = parseFloat(document.getElementById("lado").value);
+  let points;
+
+  if (lado > 0) {
+    const centerX = 0;
+    const centerY = 0;
+    const halfSize = lado / 2;
+
+    points = [
+      { x: -halfSize, y: -halfSize },
+      { x: halfSize, y: -halfSize },
+      { x: halfSize, y: halfSize },
+      { x: -halfSize, y: halfSize }
+    ];
+  } else {
+    const A = getPoint("A");
+    const B = getPoint("B");
+    const C = getPoint("C");
+    const D = getPoint("D");
+
+    if (!A || !B || !C || !D) {
+      alert("Por favor, insira todas as coordenadas corretamente.");
+      return;
+    }
+
+    points = [A, B, C, D];
+  }
+
+  // Salva os pontos atuais do quadrado
+  squarePoints = points.map(p => ({ x: p.x, y: p.y }));
+
+  // Desenha
+  for (let i = 0; i < 4; i++) {
+    const next = (i + 1) % 4;
+    Line(points[i].x, points[i].y, points[next].x, points[next].y);
+  }
+
+  document.getElementById("iterationLog").style.display = "none";
 }
+
 
 // Atualize a função drawFigure para usar drawSquare
 function drawFigure() {
 clearCanvas();
 const figure = document.getElementById("figureSelect").value;
 
-if (figure === "line") {
-  const x0 = parseInt(document.getElementById("x1").value);
-  const y0 = parseInt(document.getElementById("y1").value);
-  const x1 = parseInt(document.getElementById("x2").value);
-  const y1 = parseInt(document.getElementById("y2").value);
-  Line(x0, y0, x1, y1);
-} else if (figure === "circle") {
-  const cx = parseInt(document.getElementById("cx").value);
-  const cy = parseInt(document.getElementById("cy").value);
-  const radius = parseInt(document.getElementById("radius").value);
-  const algorithm = document.getElementById("circleAlgorithm").value;
-
-  if (algorithm === "midpoint") {
-    CircleMidpoint(cx, cy, radius);
-  } else if (algorithm === "equation") {
-    CircleEquation(cx, cy, radius);
-  } else if (algorithm === "trigonometric") {
-    CircleTrigonometric(cx, cy, radius);
+  if (figure === "line") {
+    const x0 = parseInt(document.getElementById("x1").value);
+    const y0 = parseInt(document.getElementById("y1").value);
+    const x1 = parseInt(document.getElementById("x2").value);
+    const y1 = parseInt(document.getElementById("y2").value);
+    Line(x0, y0, x1, y1);
+    document.getElementById('bresenhamParams').style.display = "block"; // Exibe os parâmetros do Bresenham
+  } else if (figure === "circle") {
+    const cx = parseInt(document.getElementById("cx").value);
+    const cy = parseInt(document.getElementById("cy").value);
+    const radius = parseInt(document.getElementById("radius").value);
+    const algorithm = document.getElementById("circleAlgorithm").value;
+    document.getElementById('bresenhamParams').style.display = "block"; 
+    if (algorithm === "midpoint") {
+      CircleMidpoint(cx, cy, radius);
+    } else if (algorithm === "equation") {
+      CircleEquation(cx, cy, radius);
+    } else if (algorithm === "trigonometric") {
+      CircleTrigonometric(cx, cy, radius);
+    }
+  } else{
+    document.getElementById('bresenhamParams').style.display = "none"; 
+    const lado = parseInt(document.getElementById("lado").value);
+    drawSquare(lado); // Agora desenha um quadrado simples
   }
-} else{
-  const lado = parseInt(document.getElementById("lado").value);
-  drawSquare(lado); // Agora desenha um quadrado simples
 }
+
+
+
+
+
+// TRNSFORMAÇÕES
+// Função para aplicar a translação nos pontos
+function translateSquare() {
+  const tx = parseInt(document.getElementById("tx").value);
+  const ty = parseInt(document.getElementById("ty").value);
+  
+  if (!squarePoints || squarePoints.length === 0) {
+    alert("Desenhe o quadrado primeiro.");
+    return;
+  }
+
+  // Aplica a translação nos pontos
+  squarePoints = squarePoints.map(p => ({
+    x: p.x + tx,
+    y: p.y + ty
+  }));
+
+  console.log(squarePoints);
+  // Redesenha a figura transladada
+  clearCanvas();
+  for (let i = 0; i < 4; i++) {
+    const next = (i + 1) % 4;
+    Line(squarePoints[i].x, squarePoints[i].y, squarePoints[next].x, squarePoints[next].y);
+  }
 }
+
+
+function scale() {
+  const sx = parseInt(document.getElementById("sx").value);
+  const sy = parseInt(document.getElementById("sy").value);
+  
+  if (!squarePoints || squarePoints.length === 0) {
+    alert("Desenhe o quadrado primeiro.");
+    return;
+  }
+
+  if(sx === 0){
+    squarePoints = squarePoints.map(p => ({
+      x: p.x*1,
+      y: p.y*sy
+    }));
+  }else if(sy === 0){
+    squarePoints = squarePoints.map(p => ({
+      x: p.x*sx,
+      y: p.y*1
+  }))}
+
+  // Aplica a translação nos pontos
+  
+
+  console.log(squarePoints);
+  // Redesenha a figura transladada
+  clearCanvas();
+  for (let i = 0; i < 4; i++) {
+    const next = (i + 1) % 4;
+    Line(squarePoints[i].x, squarePoints[i].y, squarePoints[next].x, squarePoints[next].y);
+  }
+}
+
+function rotateSquare() {
+  const angleDegrees = parseInt(document.getElementById("ang").value);
+
+  if (!squarePoints || squarePoints.length === 0) {
+    alert("Desenhe o quadrado primeiro.");
+    return;
+  }
+
+  const angleRad = (angleDegrees * Math.PI) / 180;
+
+  // Calcular o centro do quadrado atual
+  const center = squarePoints.reduce(
+    (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }),
+    { x: 0, y: 0 }
+  );
+  center.x /= squarePoints.length;
+  center.y /= squarePoints.length;
+
+  // Aplicar rotação em torno do centro
+  squarePoints = squarePoints.map(p => {
+    const dx = p.x - center.x;
+    const dy = p.y - center.y;
+    return {
+      x: center.x + dx * Math.cos(angleRad) - dy * Math.sin(angleRad),
+      y: center.y + dx * Math.sin(angleRad) + dy * Math.cos(angleRad),
+    };
+  });
+
+  clearCanvas();
+  for (let i = 0; i < 4; i++) {
+    const next = (i + 1) % 4;
+    Line(squarePoints[i].x, squarePoints[i].y, squarePoints[next].x, squarePoints[next].y);
+  }
+}
+
+
+function reflectSquare() {
+
+  const axis = document.getElementById("ref").value;
+
+  if (!squarePoints || squarePoints.length === 0) {
+    alert("Desenhe o quadrado primeiro.");
+    return;
+  }
+
+  squarePoints = squarePoints.map(p => {
+    switch (axis) {
+      case "x":
+        return { x: p.x, y: -p.y };
+      case "y":
+        return { x: -p.x, y: p.y };
+      case "origem":
+        return { x: -p.x, y: -p.y };
+      default:
+        return p;
+    }
+  });
+
+  clearCanvas();
+  for (let i = 0; i < 4; i++) {
+    const next = (i + 1) % 4;
+    Line(squarePoints[i].x, squarePoints[i].y, squarePoints[next].x, squarePoints[next].y);
+  }
+}
+
+
 
 updateCanva();

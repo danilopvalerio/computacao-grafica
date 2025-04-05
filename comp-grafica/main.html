@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Plano Cartesiano</title>
+  </head>
+  <body>
+    <div class="layout-container">
+      <div class="sidebar">
+        <h2>Configurações</h2>
+        <div class="config"> 
+            <label>Janela</label>
+            <input
+            type="number"
+            id="width"
+            value="500"
+            min="100"
+            max="1000"
+            placeholder="W"
+          />
+          <input
+            type="number"
+            id="height"
+            value="500"
+            min="100"
+            max="620"
+            placeholder="H"
+          />
+        </div>
+        <button onclick="updateCanva()">Atualizar janela</button>
+      <!-- 
+        <label>Cor de fundo:</label>
+        <select id="backgroundColor"> 
+          <option value="white">Branco</option>
+          <option value="black">Preto</option>
+        </select>
+        -->
+        <button onclick="clearCanvas()">Limpar</button>
+        <h2>Figuras</h2>
+        <select id="figureSelect" onchange="changeFigure()">
+          <option value="line">Reta</option>
+          <option value="circle">Círculo</option>
+          <option value="cube">Quadrado</option>
+        </select>
+
+        <div id="lineParams" >
+          <div>
+              <label>X1:</label>
+              <input type="number" id="x1" value="10" placeholder="X1" />
+          </div>
+          <div>
+              <label>Y1:</label>
+              <input type="number" id="y1" value="10" placeholder="Y1" />
+          </div>
+          <div>
+              <label>X2:</label>
+              <input type="number" id="x2" value="50" placeholder="X2" />
+          </div>
+          <div>
+              <label>Y2:</label>
+              <input type="number" id="y2" value="90" placeholder="Y2" />
+          </div>
+          <div>
+              <label>Algoritmo:</label>
+              <select id="lineAlgorithm">
+                  <option value="dda">DDA</option>
+                  <option value="bresenham2">Bresenham 1º e 2º oitante</option>
+              </select>
+          </div>
+          <button onclick="drawFigure()">Desenhar Reta</button>
+        </div>
+      
+
+        <div id="circleParams" style="display: none">
+          <label>Centro x:</label>
+          <input type="number" id="cx" value="0" placeholder="CX" />
+          <label>Centro y:</label>
+          <input type="number" id="cy" value="0" placeholder="CY" />
+          <label>Raio:</label>
+          <input type="number" id="radius" value="50" placeholder="Raio" />
+          <label>Algoritmo:</label>
+          <select id="circleAlgorithm">
+            <option value="midpoint">Ponto Médio</option>
+            <option value="equation">Equação da Circunferência</option>
+            <option value="trigonometric">Trigonométrico</option>
+          </select>
+          <button onclick="drawFigure()">Desenhar Círculo</button>
+        </div>
+
+        <div id="cubeParams" style="display: none">
+          <label>Lado:</label>
+          <input id="lado" value="0" placeholder="Lado" />
+          <label>A:</label>
+          <input id="A" value="(0,0)" placeholder="CX" />
+          <label>B:</label>
+          <input id="B" value="(0,50)" placeholder="CY" />
+          <label>C:</label>
+          <input id="C" value="(50,50)" placeholder="CZ" />
+          <label>D:</label>
+          <input id="D" value="(50,0)" placeholder="CZ" />
+          <button onclick="drawFigure()">Desenhar Cubo</button>
+        </div>
+
+        <div id="bresenhamParams" style="display: none">
+          <h2>Iterações</h2>
+          <div id="iterationLog" style="max-height: 200px; width:100%;overflow-y: auto; border: 1px solid #ccc; padding: 5px;"></div>
+        </div>
+        
+      </div>
+      <div class="main-content">
+        
+        <canvas id="canvas" height="500" width="500"></canvas>
+      </div>
+      <div class="transformer-header">
+          <h2>Transformações</h2>
+          <select id="transformeSelect" onchange="changeTransformer()">
+            <option value="translacao">Translação</option>
+            <option value="escala">Escala</option>
+            <option value="rotacao">Rotação</option>
+            <option value="reflexao">Reflexão</option>
+            <option value="cisalhamento">Cisalhamento</option>
+          </select>
+
+
+          <div id="translacao">
+            <label>tx:</label>
+            <input type="number" id="tx" value="0" placeholder="CX" />
+            <label>ty:</label>
+            <input type="number" id="ty" value="0" placeholder="CY" />
+            <button onclick="translateSquare()">Aplicar Transformação</button>
+          </div>
+
+          <div id="escala" style="display: none">
+            <label>sx:</label>
+            <input type="number" id="sx" value="0" placeholder="CX" />
+            <label>sy:</label>
+            <input type="number" id="sy" value="0" placeholder="CY" />
+            <button onclick="scale()">Aplicar Transformação</button>
+  
+          </div>
+
+          <div id="rotacao" style="display: none">
+            <label>θ:</label>
+            <input type="number" id="ang" value="0" placeholder="CX" />
+            <select id="transformeSelect" onchange="changeTransformer()">
+              <option value="rotX">Em X</option>
+              <option value="rotY">Em Y</option>
+            </select>
+            <button onclick="rotateSquare()">Aplicar Transformação</button>
+          </div>
+
+          <div id="reflexao" style="display: none">
+            <label>Em:</label>
+            <input type="text" id="ref" value="x" placeholder="CX" />
+            <button onclick="reflectSquare()">Aplicar Transformação</button>
+          </div>
+
+          <div id="cisalhamento" style="display: none">
+            <label>shx (a):</label>
+            <input type="number" id="cx" value="0" placeholder="CX" />
+
+            <label>shy (b):</label>
+            <input type="number" id="cy" value="0" placeholder="CY" />
+
+            <select id="transformeSelect" onchange="changeTransformer()">
+              <option value="cisX">Em X</option>
+              <option value="cisY">Em Y</option>
+              <option value="cisXY">Em X e Y</option>
+            </select>
+            <button onclick="drawFigure()">Aplicar Transformação</button>
+          </div>
+
+
+          <h2>Historico</h2>
+          <div id="historico">
+
+          </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+    <script src="transformer.js"></script>
+  </body>
+</html>
