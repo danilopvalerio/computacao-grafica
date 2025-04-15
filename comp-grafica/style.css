@@ -6,6 +6,9 @@ body {
   background-color: #f4f4f4 !important;
   font-family: Arial, sans-serif;
 }
+.coords {
+  font-size: 12px;
+}
 
 .gradient-custom-strong {
   /* fallback for old browsers */

@@ -493,4 +493,32 @@ function reflectSquare() {
   }
 }
 
+// ============================
+// FUNÇÃO PARA ATUALIZAR COORDENADAS DO MOUSE
+// ============================
+
+function setupMouseCoordsTracker() {
+  const mouseCoordsElement = document.getElementById("mouseCoords");
+
+  canvas.addEventListener("mousemove", (event) => {
+    // Obtém a posição do mouse em relação ao canvas
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Converte para coordenadas do plano cartesiano (considerando o centro como (0,0))
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const coordX = mouseX - centerX;
+    const coordY = centerY - mouseY; // Invertemos Y porque no canvas Y cresce para baixo
+
+    // Atualiza o elemento HTML com as coordenadas
+    mouseCoordsElement.textContent = `Coordenadas: (${coordX.toFixed(
+      0
+    )}, ${coordY.toFixed(0)})`;
+  });
+}
+
+setupMouseCoordsTracker();
+
 updateCanva();
