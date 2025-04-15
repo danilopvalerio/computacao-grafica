@@ -1,39 +1,14 @@
-// ============================
-// VARIÁVEIS GLOBAIS
-// ============================
 let canva_width = 500;
 let canva_height = 500;
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-let squarePoints = [];
-
-// ============================
-// FUNÇÕES PARA OBTENÇÃO DE DADOS DO FORMULÁRIO
-// ============================
-
-// Retorna um ponto a partir do valor de um input (ex: "(3,4)")
-const getPoint = (id) => {
-  const val = document.getElementById(id).value.trim();
-  const match = val.match(/\(?\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*\)?/);
-  if (match) {
-    return {
-      x: parseFloat(match[1]),
-      y: parseFloat(match[3]),
-    };
-  }
-  return null;
-};
-
-// ============================
-// FUNÇÕES DE GERENCIAMENTO DO CANVAS
-// ============================
-
-// Atualiza tamanho do canvas com base nos inputs
 function updateCanva() {
   let largura = parseInt(document.getElementById("width").value);
   let altura = parseInt(document.getElementById("height").value);
+  //const backgroundColor =
+  // document.getElementById("backgroundColor").value;
 
   if (!isNaN(largura) && !isNaN(altura)) {
     largura = Math.min(Math.max(largura, 100), 1000);
@@ -48,7 +23,6 @@ function updateCanva() {
   drawAxis();
 }
 
-// Desenha os eixos X e Y no centro do canvas
 function drawAxis() {
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
@@ -62,17 +36,6 @@ function drawAxis() {
   ctx.stroke();
 }
 
-// Limpa o canvas e redesenha os eixos
-function clearCanvas() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawAxis();
-}
-
-// ============================
-// FUNÇÕES PARA PIXEL E LOGS
-// ============================
-
-// Define o pixel no canvas na cor vermelha
 function setPixel(x, y) {
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
@@ -80,16 +43,33 @@ function setPixel(x, y) {
   ctx.fillRect(centerX + x, centerY - y, 1, 1);
 }
 
-// Adiciona uma linha de log da iteração na tabela de logs
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawAxis();
+}
+
+function changeFigure() {
+  const figure = document.getElementById("figureSelect").value;
+  document.getElementById("lineParams").style.display =
+    figure === "line" ? "block" : "none";
+  document.getElementById("circleParams").style.display =
+    figure === "circle" ? "block" : "none";
+  document.getElementById("cubeParams").style.display =
+    figure === "cube" ? "block" : "none";
+}
+
 function logIteration(x, y, d = null, k = null) {
   const logContainer = document.getElementById("iterationLog");
 
+  // Verifica se já existe uma tabela dentro do contêiner de logs
   if (!logContainer.querySelector("table")) {
-    logContainer.innerHTML = "";
+    logContainer.innerHTML = ""; // Limpa o contêiner antes de criar a tabela
     const table = document.createElement("table");
     table.style.width = "100%";
     table.style.maxWidth = "600px";
     table.style.borderCollapse = "collapse";
+
+    // Criação do cabeçalho da tabela com os nomes das colunas
     table.innerHTML = `
       <thead>
         <tr>
@@ -101,30 +81,29 @@ function logIteration(x, y, d = null, k = null) {
         </tr>
       </thead>
       <tbody></tbody>`;
-    logContainer.appendChild(table);
+
+    logContainer.appendChild(table); // Adiciona a tabela ao contêiner
   }
 
   const tbody = logContainer.querySelector("tbody");
   const row = document.createElement("tr");
+
+  // Criação da linha com os valores atuais da iteração
   row.innerHTML = `
     <td style="border: 1px solid black; padding: 8px;">${
       d !== null ? d : k
     }</td>
     <td style="border: 1px solid black; padding: 8px;">${x}</td>
-    <td style="border: 1px solid black; padding: 8px;">${y}</td>`;
-  tbody.appendChild(row);
+    <td style="border: 1px solid black; padding: 8px;">${y}</td>
+  `;
+
+  tbody.appendChild(row); // Adiciona a linha à tabela
 }
 
-// Limpa a tabela de logs
 function clearLog() {
   document.getElementById("iterationLog").innerHTML = "";
 }
 
-// ============================
-// FUNÇÕES DE DESENHO DE RETAS
-// ============================
-
-// Algoritmo DDA para desenhar uma linha entre dois pontos
 function LineDDA(x0, y0, x1, y1) {
   clearLog();
   const dx = x1 - x0;
@@ -143,7 +122,6 @@ function LineDDA(x0, y0, x1, y1) {
   }
 }
 
-// Algoritmo de Bresenham para desenhar linha entre dois pontos (1º e 2º octante)
 function LineBresenham(x1, y1, x2, y2) {
   clearLog();
   const dx = x2 - x1;
@@ -187,21 +165,6 @@ function LineBresenham(x1, y1, x2, y2) {
   }
 }
 
-// Função auxiliar que escolhe o algoritmo de linha
-function Line(x0, y0, x1, y1) {
-  const algorithm = document.getElementById("lineAlgorithm").value;
-  if (algorithm === "dda") {
-    LineDDA(x0, y0, x1, y1);
-  } else if (algorithm === "bresenham2") {
-    LineBresenham(x0, y0, x1, y1);
-  }
-}
-
-// ============================
-// FUNÇÕES DE DESENHO DE CÍRCULO
-// ============================
-
-// Algoritmo do ponto médio para desenhar circunferência
 function CircleMidpoint(cx, cy, radius) {
   clearLog();
   let x = 0;
@@ -236,7 +199,15 @@ function CircleMidpoint(cx, cy, radius) {
   }
 }
 
-// Desenho de circunferência pela equação implícita x² + y² = r²
+function Line(x0, y0, x1, y1) {
+  const algorithm = document.getElementById("lineAlgorithm").value;
+  if (algorithm === "dda") {
+    LineDDA(x0, y0, x1, y1);
+  } else if (algorithm === "bresenham2") {
+    LineBresenham(x0, y0, x1, y1);
+  }
+}
+
 function CircleEquation(cx, cy, radius) {
   for (let x = -radius; x <= radius; x++) {
     const y = Math.sqrt(radius * radius - x * x);
@@ -245,7 +216,6 @@ function CircleEquation(cx, cy, radius) {
   }
 }
 
-// Desenho de circunferência usando funções trigonométricas
 function CircleTrigonometric(cx, cy, radius) {
   const steps = 100;
   for (let i = 0; i < steps; i++) {
@@ -256,11 +226,20 @@ function CircleTrigonometric(cx, cy, radius) {
   }
 }
 
-// ============================
-// FUNÇÕES DE DESENHO DE QUADRADO
-// ============================
+let squarePoints = [];
+const getPoint = (id) => {
+  const val = document.getElementById(id).value.trim();
+  const match = val.match(/\(?\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*\)?/);
+  if (match) {
+    return {
+      x: parseFloat(match[1]),
+      y: parseFloat(match[3]),
+    };
+  }
+  return null;
+};
 
-// Desenha quadrado baseado em lado ou pontos A, B, C, D
+// Receber os pontos do quadrado e aplicar no desenho
 function drawSquare() {
   const lado = parseFloat(document.getElementById("lado").value);
   let points;
@@ -290,8 +269,10 @@ function drawSquare() {
     points = [A, B, C, D];
   }
 
+  // Salva os pontos atuais do quadrado
   squarePoints = points.map((p) => ({ x: p.x, y: p.y }));
 
+  // Desenha
   for (let i = 0; i < 4; i++) {
     const next = (i + 1) % 4;
     Line(points[i].x, points[i].y, points[next].x, points[next].y);
@@ -300,22 +281,7 @@ function drawSquare() {
   document.getElementById("iterationLog").style.display = "none";
 }
 
-// ============================
-// FUNÇÕES DE CONTROLE DE INTERFACE
-// ============================
-
-// Mostra/oculta campos de acordo com a figura escolhida
-function changeFigure() {
-  const figure = document.getElementById("figureSelect").value;
-  document.getElementById("lineParams").style.display =
-    figure === "line" ? "block" : "none";
-  document.getElementById("circleParams").style.display =
-    figure === "circle" ? "block" : "none";
-  document.getElementById("cubeParams").style.display =
-    figure === "cube" ? "block" : "none";
-}
-
-// Executa o desenho com base na figura selecionada
+// Atualize a função drawFigure para usar drawSquare
 function drawFigure() {
   clearCanvas();
   const figure = document.getElementById("figureSelect").value;
@@ -326,14 +292,13 @@ function drawFigure() {
     const x1 = parseInt(document.getElementById("x2").value);
     const y1 = parseInt(document.getElementById("y2").value);
     Line(x0, y0, x1, y1);
-    document.getElementById("bresenhamParams").style.display = "block";
+    document.getElementById("bresenhamParams").style.display = "block"; // Exibe os parâmetros do Bresenham
   } else if (figure === "circle") {
     const cx = parseInt(document.getElementById("cx").value);
     const cy = parseInt(document.getElementById("cy").value);
     const radius = parseInt(document.getElementById("radius").value);
     const algorithm = document.getElementById("circleAlgorithm").value;
     document.getElementById("bresenhamParams").style.display = "block";
-
     if (algorithm === "midpoint") {
       CircleMidpoint(cx, cy, radius);
     } else if (algorithm === "equation") {
@@ -341,15 +306,14 @@ function drawFigure() {
     } else if (algorithm === "trigonometric") {
       CircleTrigonometric(cx, cy, radius);
     }
-  } else if (figure === "cube") {
-    drawSquare();
+  } else {
+    document.getElementById("bresenhamParams").style.display = "none";
+    const lado = parseInt(document.getElementById("lado").value);
+    drawSquare(lado); // Agora desenha um quadrado simples
   }
 }
 
-// ============================
-// TRANSFORMAÇÕES
-// ============================
-
+// TRNSFORMAÇÕES
 // Função para aplicar a translação nos pontos
 function translateSquare() {
   const tx = parseInt(document.getElementById("tx").value);
@@ -380,7 +344,6 @@ function translateSquare() {
   }
 }
 
-// Função para aplicar a escala nos pontos
 function scale() {
   const sx = parseInt(document.getElementById("sx").value);
   const sy = parseInt(document.getElementById("sy").value);
@@ -418,7 +381,6 @@ function scale() {
   }
 }
 
-// Função para aplicar a rotação nos pontos
 function rotateSquare() {
   const angleDegrees = parseInt(document.getElementById("ang").value);
 
@@ -459,7 +421,6 @@ function rotateSquare() {
   }
 }
 
-// Função para aplicar a reflexão nos pontos
 function reflectSquare() {
   const axis = document.getElementById("ref").value;
 

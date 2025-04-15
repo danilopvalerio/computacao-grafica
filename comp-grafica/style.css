@@ -1,12 +1,19 @@
 body {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    margin: 0;
-    background-color: #f4f4f4;
-    font-family: Arial, sans-serif;
-  }
-  
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+  background-color: #f4f4f4;
+  font-family: Arial, sans-serif;
+}
+
+.gradient-custom-strong {
+  /* fallback for old browsers */
+  background: #d3e1e8;
+  box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.26);
+  border: 1px solid #b1b1b1 !important;
+}
+
 .layout-container {
   display: flex;
   flex-direction: row;
@@ -16,98 +23,154 @@ body {
 
 .sidebar {
   width: 100%;
-  min-height: 100vh;
+  max-height: 90vh;
+  overflow: hidden;
+  overflow-y: scroll;
   max-width: 220px;
-  background: white;
-  padding: 20px;
+  padding: 5px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
-  
-.config {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-  
-.config label {
-    margin-right: 0.3em;
-}
-  
-.config input {
-    margin-right: 0.3em;
-    flex: 1;
-    min-width: 40px;
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+  border-radius: 10px;
+  padding: 20px;
 }
 
-#figureSelect, #lineAlgorithm, #circleAlgorithm, #transformeSelect {
+.sidebar::-webkit-scrollbar-track {
+  background: #d3e1e8;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: #6e686866; /* cor do scroll */
+  border-radius: 10px;
+  border: none;
+}
+
+.config {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.config label {
+  margin-right: 0.3em;
+}
+
+.config input {
+  margin-right: 0.3em;
+  flex: 1;
+  min-width: 40px;
+}
+
+#figureSelect,
+#lineAlgorithm,
+#circleAlgorithm,
+#transformeSelect {
   appearance: none;
   background-color: #f8f9fa;
-  border-radius: 5px;
-  padding: 8px 8px;
-  margin-bottom: 10px;
+  border-radius: 15px;
+  padding: 4px 4px;
+  margin-bottom: 5px;
   width: 100%;
-  font-size: 16px;
+  font-size: 13px;
   color: #333;
   cursor: pointer;
   outline: none;
   transition: all 0.3s ease;
+  padding-left: 10px;
 }
 
-#figureSelect:hover, #lineAlgorithm:hover, #circleAlgorithm:hover ,#transformeSelect:hover {
-  background-color: #e9ecef;
+#figureSelect:hover,
+#lineAlgorithm:hover,
+#circleAlgorithm:hover,
+#transformeSelect:hover {
+  background-color: #004ca866 !important;
+  border: 1px solid #ffffff !important;
+  color: white !important;
+  font-weight: 600;
 }
 
-#figureSelect:focus, #lineAlgorithm:focus, #circleAlgorithm:focus, #transformeSelect:focus {
-  border-color: #0056b3;
-  box-shadow: 0 0 5px rgba(0, 91, 187, 0.5);
+#figureSelect:focus,
+#lineAlgorithm:focus,
+#circleAlgorithm:focus,
+#transformeSelect:focus {
+  background-color: #ffffff !important;
+  border: 1px solid #ffffff !important;
+  color: rgb(27, 46, 69) !important;
+  font-weight: 600;
 }
 
-#figureSelect option, #lineAlgorithm option, #circleAlgorithm option , #transformeSelect option {
-  background: white;
-  color: black;
+#figureSelect option,
+#lineAlgorithm option,
+#circleAlgorithm option,
+#transformeSelect option {
+  background-color: #004ca866 !important;
+  border: 1px solid #ffffff !important;
+  color: white !important;
+  font-weight: 600;
 }
-  
+
+#figureSelect {
+  border: 1px solid #ccc !important;
+}
 input {
-    width: 90%;
-    padding: 8px;
-    margin: 5px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+  padding: 5px 10px;
+
+  margin: 5px 0;
+  border: 1px solid #ccc !important;
+  border-radius: 15px !important;
+  font-size: 13px !important;
 }
-  
+
+/* Para navegadores WebKit (Chrome, Safari, Edge) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Para Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    transition: 0.3s;
+  width: 100%;
+  padding: 4px;
+  margin-top: 10px !important;
+  border: 1px solid #ccc !important;
+  border-radius: 20px !important;
+  background-color: #ffffff !important;
+  color: rgb(0, 0, 0) !important;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 14px !important;
 }
-  
+
 button:hover {
-    background-color: #0056b3;
+  background-color: #004ca866 !important;
+  border: 1px solid #ffffff !important;
+  color: white !important;
+  font-weight: 600;
 }
-  
+
 .main-content {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    flex-direction: column;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  flex-direction: column;
 }
 
 .transformer-header {
   flex-shrink: 0;
   width: 220px;
-  background-color: #ffffff;
   color: rgb(0, 0, 0);
   display: flex;
   align-items: center;
@@ -116,51 +179,47 @@ button:hover {
   padding: 20px;
 }
 
-.transformer-header {
-  min-height: auto;
-  height: 100vh;
-}
-  
 canvas {
-    border: 1px solid #ccc;
-    max-width: 100%;
-    height: auto;
+  border: 1px solid #ccc;
+  max-width: 100%;
+  height: auto;
 }
-  
+
 #iterationLog {
-    max-width: 100%;
-    overflow-x: auto;
+  max-width: 100%;
+  overflow-x: auto;
 }
-  
+
 table {
-    width: 100%;
-    max-width: 800px;
-    border-collapse: collapse;
-    margin-top: 10px;
+  width: 100%;
+  max-width: 800px;
+  border-collapse: collapse;
+  margin-top: 10px;
 }
-  
-th, td {
-    border: 1px solid black;
-    padding: 8px;
-    text-align: center;
+
+th,
+td {
+  border: 1px solid #97a0a4 !important;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  background-color: #d3e1e8;
+  border: 1px solid #97a0a4 !important;
+}
+
+/* Responsividade */
+@media (min-width: 768px) {
+  body {
+    flex-direction: row;
   }
-  
-  th {
-    background-color: #f0f0f0;
+
+  .sidebar {
+    width: 280px;
   }
-  
-  /* Responsividade */
-  @media (min-width: 768px) {
-    body {
-      flex-direction: row;
-    }
-  
-    .sidebar {
-      width: 280px;
-    }
-  
-    .main-content {
-      width: calc(100% - 280px);
-    }
+
+  .main-content {
+    width: calc(100% - 280px);
   }
-  
+}
