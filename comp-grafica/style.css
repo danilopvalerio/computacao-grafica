@@ -3,7 +3,7 @@ body {
   flex-direction: column;
   height: 100%;
   margin: 0;
-  background-color: #f4f4f4;
+  background-color: #f4f4f4 !important;
   font-family: Arial, sans-serif;
 }
 
@@ -89,7 +89,7 @@ body {
 #lineAlgorithm:hover,
 #circleAlgorithm:hover,
 #transformeSelect:hover {
-  background-color: #004ca866 !important;
+  background-color: #3358794a !important;
   border: 1px solid #ffffff !important;
   color: white !important;
   font-weight: 600;
@@ -109,7 +109,7 @@ body {
 #lineAlgorithm option,
 #circleAlgorithm option,
 #transformeSelect option {
-  background-color: #004ca866 !important;
+  background-color: #3358794a !important;
   border: 1px solid #ffffff !important;
   color: white !important;
   font-weight: 600;
@@ -153,7 +153,7 @@ button {
 }
 
 button:hover {
-  background-color: #004ca866 !important;
+  background-color: #3358794a !important;
   border: 1px solid #ffffff !important;
   color: white !important;
   font-weight: 600;
