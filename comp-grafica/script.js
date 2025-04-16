@@ -362,6 +362,7 @@ function drawFigure() {
 
 // Função para aplicar a translação nos pontos
 function translateSquare() {
+  console.log("transladando...");
   const tx = parseInt(document.getElementById("tx").value);
   const ty = parseInt(document.getElementById("ty").value);
 
@@ -410,6 +411,7 @@ function translateSquare() {
 
 // Função para aplicar a escala nos pontos
 function scale() {
+  console.log("escalonizando...");
   const sx = parseInt(document.getElementById("sx").value);
   const sy = parseInt(document.getElementById("sy").value);
 
@@ -448,6 +450,7 @@ function scale() {
 
 // Função para aplicar a rotação nos pontos
 function rotateSquare() {
+  console.log("rotacionando...");
   const angleDegrees = parseInt(document.getElementById("ang").value);
 
   if (!squarePoints || squarePoints.length === 0) {
@@ -489,6 +492,7 @@ function rotateSquare() {
 
 // Função para aplicar a reflexão nos pontos
 function reflectSquare() {
+  console.log("refletindo...");
   const axis = document.getElementById("ref").value;
 
   if (!squarePoints || squarePoints.length === 0) {
