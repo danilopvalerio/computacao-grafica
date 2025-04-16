@@ -9,6 +9,7 @@ const ctx = canvas.getContext("2d");
 
 let squarePoints = [];
 
+let matrizFigura = null;
 // ============================
 // FUNÇÕES PARA OBTENÇÃO DE DADOS DO FORMULÁRIO
 // ============================
@@ -263,6 +264,7 @@ function CircleTrigonometric(cx, cy, radius) {
 // Desenha quadrado baseado em lado ou pontos A, B, C, D
 function drawSquare() {
   const lado = parseFloat(document.getElementById("lado").value);
+  document.getElementById("lineAlgorithm").value = "dda";
   let points;
 
   if (lado > 0) {
@@ -270,11 +272,15 @@ function drawSquare() {
     const centerY = 0;
     const halfSize = lado / 2;
 
+    // [ x1, y1, 1 ]  // Ponto 1
+    // [ x2, y2, 1 ]  // Ponto 2
+    // [ x3, y3, 1 ]  // Ponto 3
+    // [ x4, y4, 1 ]  // Ponto 4
     points = [
-      { x: -halfSize, y: -halfSize },
-      { x: halfSize, y: -halfSize },
-      { x: halfSize, y: halfSize },
-      { x: -halfSize, y: halfSize },
+      [-halfSize, -halfSize, 1],
+      [halfSize, -halfSize, 1],
+      [halfSize, halfSize, 1],
+      [-halfSize, halfSize, 1],
     ];
   } else {
     const A = getPoint("A");
@@ -287,14 +293,18 @@ function drawSquare() {
       return;
     }
 
-    points = [A, B, C, D];
+    points = [
+      [A.x, A.y, 1],
+      [B.x, B.y, 1],
+      [C.x, C.y, 1],
+      [D.x, D.y, 1],
+    ];
   }
 
-  squarePoints = points.map((p) => ({ x: p.x, y: p.y }));
-
+  squarePoints = points;
   for (let i = 0; i < 4; i++) {
     const next = (i + 1) % 4;
-    Line(points[i].x, points[i].y, points[next].x, points[next].y);
+    Line(points[i][0], points[i][1], points[next][0], points[next][1]);
   }
 
   document.getElementById("iterationLog").style.display = "none";
@@ -360,22 +370,40 @@ function translateSquare() {
     return;
   }
 
-  // Aplica a translação nos pontos
-  squarePoints = squarePoints.map((p) => ({
-    x: p.x + tx,
-    y: p.y + ty,
-  }));
+  const translationMatrix = [
+    [1, 0, tx],
+    [0, 1, ty],
+    [0, 0, 1],
+  ];
 
-  console.log(squarePoints);
+  // Aplica a translação multiplicando o ponto pela matriz
+  squarePoints = squarePoints.map((p) => {
+    // A multiplicação de matriz é feita para cada ponto
+    const newX =
+      p[0] * translationMatrix[0][0] +
+      p[1] * translationMatrix[0][1] +
+      p[2] * translationMatrix[0][2];
+    const newY =
+      p[0] * translationMatrix[1][0] +
+      p[1] * translationMatrix[1][1] +
+      p[2] * translationMatrix[1][2];
+    const newZ =
+      p[0] * translationMatrix[2][0] +
+      p[1] * translationMatrix[2][1] +
+      p[2] * translationMatrix[2][2];
+
+    return [newX, newY, newZ];
+  });
+
   // Redesenha a figura transladada
   clearCanvas();
   for (let i = 0; i < 4; i++) {
     const next = (i + 1) % 4;
     Line(
-      squarePoints[i].x,
-      squarePoints[i].y,
-      squarePoints[next].x,
-      squarePoints[next].y
+      squarePoints[i][0], // x
+      squarePoints[i][1], // y
+      squarePoints[next][0], // x do próximo ponto
+      squarePoints[next][1] // y do próximo ponto
     );
   }
 }
