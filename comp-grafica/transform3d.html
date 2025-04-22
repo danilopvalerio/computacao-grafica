@@ -142,7 +142,7 @@
                   class="form-control"
                   type="number"
                   id="y2_3d"
-                  value="90"
+                  value="15"
                 />
               </div>
               <div class="col-4">
@@ -212,57 +212,73 @@
           <div class="mb-4 text-center">
             <h2 class="fs-5 text-center mb-3">Controle dos Eixos</h2>
 
-            <div class="d-flex justify-content-center">
-              <!-- Slider Eixo X -->
-              <div class="slider-container">
+            <div class="row">
+              <!-- Controles Eixo X -->
+              <div class="col-12">
                 <span class="axis-color x-axis"></span>
-                <span class="slider-label">Eixo X</span>
-                <input
-                  type="range"
-                  class="slider-vertical"
-                  id="xAxisSlider"
-                  min="-180"
-                  max="180"
-                  value="0"
-                  step="1"
-                  oninput="atualizarRotacao('x', this.value)"
-                />
-                <div class="slider-value" id="xAxisValue">0.0</div>
+                <span>Eixo X</span>
+                <div class="row justify-content-center">
+                  <button
+                    class="mb-1 col-3"
+                    onclick="atualizarRotacao('x', -15)"
+                  >
+                    ↺
+                  </button>
+                  <button
+                    class="mb-1 col-3"
+                    onclick="atualizarRotacao('x', 15)"
+                  >
+                    ↻
+                  </button>
+                </div>
               </div>
 
-              <!-- Slider Eixo Y -->
-              <div class="slider-container">
+              <!-- Controles Eixo Y -->
+              <div class="col-12">
                 <span class="axis-color y-axis"></span>
-                <span class="slider-label">Eixo Y</span>
-                <input
-                  type="range"
-                  class="slider-vertical"
-                  id="yAxisSlider"
-                  min="-180"
-                  max="180"
-                  value="0"
-                  step="1"
-                  oninput="atualizarRotacao('y', this.value)"
-                />
-                <div class="slider-value" id="yAxisValue">0.0</div>
+                <span>Eixo Y</span>
+                <div class="row justify-content-center">
+                  <button
+                    class="mb-1 col-3"
+                    onclick="atualizarRotacao('y', -15)"
+                  >
+                    ↺
+                  </button>
+                  <button
+                    class="mb-1 col-3"
+                    onclick="atualizarRotacao('y', 15)"
+                  >
+                    ↻
+                  </button>
+                </div>
               </div>
 
-              <!-- Slider Eixo Z -->
-              <div class="slider-container">
+              <!-- Controles Eixo Z -->
+              <div class="col-12">
                 <span class="axis-color z-axis"></span>
-                <span class="slider-label">Eixo Z</span>
-                <input
-                  type="range"
-                  class="slider-vertical"
-                  id="zAxisSlider"
-                  min="-180"
-                  max="180"
-                  value="0"
-                  step="1"
-                  oninput="atualizarRotacao('z', this.value)"
-                />
-                <div class="slider-value" id="zAxisValue">0.0</div>
+                <span>Eixo Z</span>
+                <div class="row justify-content-center">
+                  <button
+                    class="mb-1 col-3"
+                    onclick="atualizarRotacao('z', -15)"
+                  >
+                    ↺
+                  </button>
+                  <button
+                    class="mb-1 col-3"
+                    onclick="atualizarRotacao('z', 15)"
+                  >
+                    ↻
+                  </button>
+                </div>
               </div>
+            </div>
+
+            <!-- Botão de animação -->
+            <div class="mt-3">
+              <button class="btn btn-success" onclick="animarRotacao()">
+                Animar Rotação
+              </button>
             </div>
           </div>
         </div>
@@ -273,6 +289,14 @@
         <p class="coords" id="mouseCoords3D">Coordenadas: (0, 0)</p>
       </div>
     </div>
+
+    <button
+      id="btn-3d"
+      onclick="window.location.href = 'main.html'"
+      title="Abrir Transformações 2D"
+    >
+      2D
+    </button>
 
     <script src="script3d.js"></script>
   </body>

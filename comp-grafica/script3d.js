@@ -5,7 +5,11 @@ let figuraPontos = []; // Array para pontos da figura [x,y,z,w]
 let figuraCores = []; // Array paralelo para cores dos pontos
 let eixosPontos = []; // Array para pontos dos eixos [x,y,z,w]
 let eixosCores = []; // Array paralelo para cores dos eixos
-
+let axisLabels = [
+  [220, 0, 0, 1], // Label X
+  [0, 220, 0, 1], // Label Y
+  [0, 0, 220, 1], // Label Z
+];
 let canvas3D = document.getElementById("canvas3D");
 let ctx3D = canvas3D.getContext("2d");
 
@@ -141,7 +145,7 @@ function clearCanvas3D() {
   drawAxisLine([0, 0, -200, 1], [0, 0, 200, 1], "blue"); // Z
 
   // Desenha labels
-  drawAxisLabels(220, 220, 220);
+  drawAxisLabels();
 
   // Renderiza tudo
   desenharTodosPontos();
@@ -150,7 +154,7 @@ function clearCanvas3D() {
 // ============================
 // FUNÇÃO PARA ADICIONAR LABELS AOS EIXOS
 // ============================
-function drawAxisLabels(xPos, yPos, zPos) {
+function drawAxisLabels() {
   const centerX = canvas3D.width / 2;
   const centerY = canvas3D.height / 2;
 
@@ -158,9 +162,10 @@ function drawAxisLabels(xPos, yPos, zPos) {
   ctx3D.textAlign = "center";
   ctx3D.textBaseline = "middle";
 
-  const [xProjX, xProjY] = project3DTo2D([xPos, 0, 0, 1]);
-  const [yProjX, yProjY] = project3DTo2D([0, yPos, 0, 1]);
-  const [zProjX, zProjY] = project3DTo2D([0, 0, zPos, 1]);
+  // Projeta e desenha cada label
+  const [xProjX, xProjY] = project3DTo2D(axisLabels[0]);
+  const [yProjX, yProjY] = project3DTo2D(axisLabels[1]);
+  const [zProjX, zProjY] = project3DTo2D(axisLabels[2]);
 
   ctx3D.fillStyle = "red";
   ctx3D.fillText("X", centerX + xProjX, centerY - xProjY);
@@ -186,91 +191,6 @@ function drawLineFromInputs() {
 
   LineDDA([x0, y0, z0, 1], [x1, y1, z1, 1], "black");
   desenharTodosPontos();
-}
-
-// ============================
-// FUNÇÕES DE TRANSFORMAÇÃO
-// ============================
-
-function rotacionarFigura(eixo, anguloGraus) {
-  const angulo = (anguloGraus * Math.PI) / 180; // Converte para radianos
-  const cos = Math.cos(angulo);
-  const sin = Math.sin(angulo);
-
-  // Matriz de rotação adequada para o eixo selecionado
-  let matrizRotacao;
-  switch (eixo.toLowerCase()) {
-    case "x":
-      matrizRotacao = [
-        [1, 0, 0, 0],
-        [0, cos, -sin, 0],
-        [0, sin, cos, 0],
-        [0, 0, 0, 1],
-      ];
-      break;
-    case "y":
-      matrizRotacao = [
-        [cos, 0, sin, 0],
-        [0, 1, 0, 0],
-        [-sin, 0, cos, 0],
-        [0, 0, 0, 1],
-      ];
-      break;
-    case "z":
-      matrizRotacao = [
-        [cos, -sin, 0, 0],
-        [sin, cos, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-      ];
-      break;
-    default:
-      console.error("Eixo inválido. Use 'x', 'y' ou 'z'");
-      return;
-  }
-
-  // Aplica a rotação a todos os pontos da figura
-  for (let i = 0; i < figuraPontos.length; i++) {
-    figuraPontos[i] = multiplicarMatrizPonto(matrizRotacao, figuraPontos[i]);
-  }
-
-  // Redesenha a cena
-  redesenharCena();
-}
-
-function multiplicarMatrizPonto(matriz, ponto) {
-  const resultado = [0, 0, 0, 0];
-  for (let i = 0; i < 4; i++) {
-    for (let j = 0; j < 4; j++) {
-      resultado[i] += matriz[i][j] * ponto[j];
-    }
-  }
-  return resultado;
-}
-
-function redesenharCena() {
-  // Limpa o canvas
-  ctx3D.clearRect(0, 0, canvas3D.width, canvas3D.height);
-
-  // Redesenha tudo
-  desenharTodosPontos();
-  drawAxisLabels(220, 220, 220);
-}
-
-// ============================
-// ATUALIZAÇÃO DA FUNÇÃO DE INTERFACE
-// ============================
-function atualizarRotacao(eixo, valor) {
-  // Atualiza o valor exibido
-  updateAxisValue(`${eixo}AxisValue`, valor);
-
-  // Converte para número e aplica a rotação
-  const angulo = parseFloat(valor);
-  rotacionarFigura(eixo, angulo);
-}
-
-function updateAxisValue(elementId, value) {
-  document.getElementById(elementId).textContent = value;
 }
 
 // ============================
