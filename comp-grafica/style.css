@@ -226,3 +226,25 @@ th {
     width: calc(100% - 280px);
   }
 }
+
+#btn-3d {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 16px;
+  font-weight: bold;
+  z-index: 1000;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+#btn-3d:hover {
+  background-color: #084298;
+}

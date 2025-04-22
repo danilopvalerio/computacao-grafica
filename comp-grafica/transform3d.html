@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transformações 3D</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        padding: 20px;
+      }
+
+      canvas {
+        border: 1px solid #ccc;
+        margin-top: 20px;
+        background-color: white;
+        max-width: 100%;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        max-width: 600px;
+        width: 100%;
+      }
+
+      .controls label {
+        display: flex;
+        flex-direction: column;
+        font-size: 14px;
+      }
+
+      input[type="number"],
+      select {
+        padding: 5px;
+        border-radius: 5px;
+        border: 1px solid #aaa;
+      }
+
+      button {
+        grid-column: span 2;
+        padding: 10px;
+        border: none;
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      button:hover {
+        background-color: #0a58ca;
+      }
+
+      @media (max-width: 600px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+
+        button {
+          grid-column: span 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Transformações 3D</h2>
+    <div class="controls">
+      <label>tx <input type="number" id="tx" value="0" /></label>
+      <label>ty <input type="number" id="ty" value="0" /></label>
+      <label>tz <input type="number" id="tz" value="0" /></label>
+
+      <label>sx <input type="number" id="sx" value="1" /></label>
+      <label>sy <input type="number" id="sy" value="1" /></label>
+      <label>sz <input type="number" id="sz" value="1" /></label>
+
+      <label>Rot X (graus) <input type="number" id="rx" value="0" /></label>
+      <label>Rot Y (graus) <input type="number" id="ry" value="0" /></label>
+      <label>Rot Z (graus) <input type="number" id="rz" value="0" /></label>
+
+      <label>Reflexão
+        <select id="reflexao">
+          <option value="none">Nenhuma</option>
+          <option value="xy">Plano XY</option>
+          <option value="yz">Plano YZ</option>
+          <option value="xz">Plano XZ</option>
+        </select>
+      </label>
+
+      <label>Cisalhamento (shX)<input type="number" id="shx" value="0" /></label>
+      <label>Cisalhamento (shY)<input type="number" id="shy" value="0" /></label>
+      <label>Cisalhamento (shZ)<input type="number" id="shz" value="0" /></label>
+
+      <button onclick="aplicarTransformacoes3D()">Aplicar Transformações</button>
+    </div>
+
+    <canvas id="canvas3d" width="800" height="800"></canvas>
+
+    <script>
+      const canvas = document.getElementById("canvas3d");
+      const ctx = canvas.getContext("2d");
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      const cubo = [
+        [-50, -50, -50, 1], [50, -50, -50, 1], [50, 50, -50, 1], [-50, 50, -50, 1],
+        [-50, -50, 50, 1], [50, -50, 50, 1], [50, 50, 50, 1], [-50, 50, 50, 1],
+      ];
+
+      function to2D(ponto) {
+        const perspectiva = 600;
+        const z = ponto[2] + perspectiva;
+        const fator = perspectiva / z * 0.8; // redução de zoom para evitar cortes
+        return [centerX + ponto[0] * fator, centerY - ponto[1] * fator];
+      }
+
+      function drawCubo(pontos) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "black";
+        const faces = [
+          [0, 1, 2, 3], [4, 5, 6, 7], [0, 1, 5, 4],
+          [2, 3, 7, 6], [0, 3, 7, 4], [1, 2, 6, 5]
+        ];
+        for (const face of faces) {
+          ctx.beginPath();
+          const [x0, y0] = to2D(pontos[face[0]]);
+          ctx.moveTo(x0, y0);
+          for (let i = 1; i < face.length; i++) {
+            const [x, y] = to2D(pontos[face[i]]);
+            ctx.lineTo(x, y);
+          }
+          ctx.closePath();
+          ctx.stroke();
+        }
+      }
+
+      function aplicarTransformacoes3D() {
+        let pontos = JSON.parse(JSON.stringify(cubo));
+        const tx = parseFloat(document.getElementById("tx").value);
+        const ty = parseFloat(document.getElementById("ty").value);
+        const tz = parseFloat(document.getElementById("tz").value);
+        const sx = parseFloat(document.getElementById("sx").value);
+        const sy = parseFloat(document.getElementById("sy").value);
+        const sz = parseFloat(document.getElementById("sz").value);
+        const rx = parseFloat(document.getElementById("rx").value) * Math.PI / 180;
+        const ry = parseFloat(document.getElementById("ry").value) * Math.PI / 180;
+        const rz = parseFloat(document.getElementById("rz").value) * Math.PI / 180;
+        const reflexao = document.getElementById("reflexao").value;
+        const shx = parseFloat(document.getElementById("shx").value);
+        const shy = parseFloat(document.getElementById("shy").value);
+        const shz = parseFloat(document.getElementById("shz").value);
+
+        const T = [[1,0,0,tx],[0,1,0,ty],[0,0,1,tz],[0,0,0,1]];
+        const S = [[sx,0,0,0],[0,sy,0,0],[0,0,sz,0],[0,0,0,1]];
+        const Rx = [[1,0,0,0],[0,Math.cos(rx),-Math.sin(rx),0],[0,Math.sin(rx),Math.cos(rx),0],[0,0,0,1]];
+        const Ry = [[Math.cos(ry),0,Math.sin(ry),0],[0,1,0,0],[-Math.sin(ry),0,Math.cos(ry),0],[0,0,0,1]];
+        const Rz = [[Math.cos(rz),-Math.sin(rz),0,0],[Math.sin(rz),Math.cos(rz),0,0],[0,0,1,0],[0,0,0,1]];
+
+        let R = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+        if (reflexao === "xy") R = [[1,0,0,0],[0,1,0,0],[0,0,-1,0],[0,0,0,1]];
+        else if (reflexao === "yz") R = [[-1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+        else if (reflexao === "xz") R = [[1,0,0,0],[0,-1,0,0],[0,0,1,0],[0,0,0,1]];
+
+        const SH = [
+          [1, shx, shx, 0],
+          [shy, 1, shy, 0],
+          [shz, shz, 1, 0],
+          [0, 0, 0, 1],
+        ];
+
+        const M = multiplyMatrices(T, multiplyMatrices(SH, multiplyMatrices(R, multiplyMatrices(Rz, multiplyMatrices(Ry, multiplyMatrices(Rx, S))))));
+        pontos = pontos.map((p) => aplicarMatriz(p, M));
+        drawCubo(pontos);
+      }
+
+      function aplicarMatriz(ponto, matriz) {
+        const res = [];
+        for (let i = 0; i < 4; i++) {
+          res[i] = matriz[i][0] * ponto[0] + matriz[i][1] * ponto[1] + matriz[i][2] * ponto[2] + matriz[i][3] * ponto[3];
+        }
+        return res;
+      }
+
+      function multiplyMatrices(a, b) {
+        const result = Array.from({ length: 4 }, () => Array(4).fill(0));
+        for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+            for (let k = 0; k < 4; k++) {
+              result[i][j] += a[i][k] * b[k][j];
+            }
+          }
+        }
+        return result;
+      }
+
+      drawCubo(cubo);
+    </script>
+  </body>
+</html>
