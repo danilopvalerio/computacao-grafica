@@ -371,79 +371,87 @@ function translateSquare() {
     return;
   }
 
-  const translationMatrix = [
-    [1, 0, tx],
-    [0, 1, ty],
-    [0, 0, 1],
-  ];
-
-  // Aplica a translação multiplicando o ponto pela matriz
-  squarePoints = squarePoints.map((p) => {
-    // A multiplicação de matriz é feita para cada ponto
-    const newX =
-      p[0] * translationMatrix[0][0] +
-      p[1] * translationMatrix[0][1] +
-      p[2] * translationMatrix[0][2];
-    const newY =
-      p[0] * translationMatrix[1][0] +
-      p[1] * translationMatrix[1][1] +
-      p[2] * translationMatrix[1][2];
-    const newZ =
-      p[0] * translationMatrix[2][0] +
-      p[1] * translationMatrix[2][1] +
-      p[2] * translationMatrix[2][2];
-
-    return [newX, newY, newZ];
-  });
+  // Soma diretamente o vetor de translação (tx, ty)
+  squarePoints = squarePoints.map(([x, y, z]) => [x + tx, y + ty, z]);
 
   // Redesenha a figura transladada
   clearCanvas();
   for (let i = 0; i < 4; i++) {
     const next = (i + 1) % 4;
     Line(
-      squarePoints[i][0], // x
-      squarePoints[i][1], // y
-      squarePoints[next][0], // x do próximo ponto
-      squarePoints[next][1] // y do próximo ponto
+      squarePoints[i][0],
+      squarePoints[i][1],
+      squarePoints[next][0],
+      squarePoints[next][1]
     );
   }
 }
 
-// Função para aplicar a escala nos pontos
+// Função para aplicar a escala nos pontos usando a matriz homogênea
 function scale() {
   console.log("escalonizando...");
-  const sx = parseInt(document.getElementById("sx").value);
-  const sy = parseInt(document.getElementById("sy").value);
+
+  // Pegando os valores de escala
+  let sx = parseFloat(document.getElementById("sx").value);
+  let sy = parseFloat(document.getElementById("sy").value);
+
+  // Verifica se os valores são válidos (números)
+  if (isNaN(sx) || isNaN(sy)) {
+    alert("Valores de escala inválidos. Tente novamente.");
+    return;
+  }
+
+  // Verifica se os valores são negativos para tratar de forma apropriada
+  if (sx < 0) {
+    sx = 1 / Math.abs(sx); // Se negativo, aplica a inversão para diminuir
+  }
+  if (sy < 0) {
+    sy = 1 / Math.abs(sy); // Se negativo, aplica a inversão para diminuir
+  }
 
   if (!squarePoints || squarePoints.length === 0) {
     alert("Desenhe o quadrado primeiro.");
     return;
   }
 
-  if (sx === 0) {
-    squarePoints = squarePoints.map((p) => ({
-      x: p.x * 1,
-      y: p.y * sy,
-    }));
-  } else if (sy === 0) {
-    squarePoints = squarePoints.map((p) => ({
-      x: p.x * sx,
-      y: p.y * 1,
-    }));
-  }
+  // Matriz de escala homogênea 3x3
+  const scaleMatrix = [
+    [sx, 0, 0], // Escala no eixo X
+    [0, sy, 0], // Escala no eixo Y
+    [0, 0, 1], // Coordenada homogênea
+  ];
 
-  // Aplica a translação nos pontos
+  // Aplica a escala nos pontos
+  squarePoints = squarePoints.map(([x, y, z]) => {
+    // Coordenadas homogêneas (x, y, 1)
+    const point = [x, y, 1];
 
-  console.log(squarePoints);
-  // Redesenha a figura transladada
+    // Multiplicação da matriz de escala pelo ponto
+    const newX =
+      scaleMatrix[0][0] * point[0] +
+      scaleMatrix[0][1] * point[1] +
+      scaleMatrix[0][2] * point[2];
+    const newY =
+      scaleMatrix[1][0] * point[0] +
+      scaleMatrix[1][1] * point[1] +
+      scaleMatrix[1][2] * point[2];
+    const newZ =
+      scaleMatrix[2][0] * point[0] +
+      scaleMatrix[2][1] * point[1] +
+      scaleMatrix[2][2] * point[2];
+
+    return [newX, newY, newZ];
+  });
+
+  // Redesenha a figura escalonada
   clearCanvas();
   for (let i = 0; i < 4; i++) {
     const next = (i + 1) % 4;
     Line(
-      squarePoints[i].x,
-      squarePoints[i].y,
-      squarePoints[next].x,
-      squarePoints[next].y
+      squarePoints[i][0],
+      squarePoints[i][1],
+      squarePoints[next][0],
+      squarePoints[next][1]
     );
   }
 }
@@ -451,76 +459,143 @@ function scale() {
 // Função para aplicar a rotação nos pontos
 function rotateSquare() {
   console.log("rotacionando...");
-  const angleDegrees = parseInt(document.getElementById("ang").value);
+  const angleDegrees = parseFloat(document.getElementById("ang").value);
 
   if (!squarePoints || squarePoints.length === 0) {
     alert("Desenhe o quadrado primeiro.");
     return;
   }
 
-  const angleRad = (angleDegrees * Math.PI) / 180;
+  const angleRad = (-angleDegrees * Math.PI) / 180;
 
-  // Calcular o centro do quadrado atual
-  const center = squarePoints.reduce(
-    (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }),
-    { x: 0, y: 0 }
-  );
-  center.x /= squarePoints.length;
-  center.y /= squarePoints.length;
+  // Calcular o centro do quadrado
+  let centerX = 0,
+    centerY = 0;
+  for (const p of squarePoints) {
+    centerX += p[0];
+    centerY += p[1];
+  }
+  centerX /= squarePoints.length;
+  centerY /= squarePoints.length;
 
-  // Aplicar rotação em torno do centro
+  const cos = Math.cos(angleRad);
+  const sin = Math.sin(angleRad);
+
+  // Aplicar rotação com translação implícita
   squarePoints = squarePoints.map((p) => {
-    const dx = p.x - center.x;
-    const dy = p.y - center.y;
-    return {
-      x: center.x + dx * Math.cos(angleRad) - dy * Math.sin(angleRad),
-      y: center.y + dx * Math.sin(angleRad) + dy * Math.cos(angleRad),
-    };
+    const dx = p[0] - centerX;
+    const dy = p[1] - centerY;
+    const xRot = dx * cos - dy * sin + centerX;
+    const yRot = dx * sin + dy * cos + centerY;
+    return [xRot, yRot, 1];
   });
 
+  // Redesenhar
   clearCanvas();
   for (let i = 0; i < 4; i++) {
     const next = (i + 1) % 4;
     Line(
-      squarePoints[i].x,
-      squarePoints[i].y,
-      squarePoints[next].x,
-      squarePoints[next].y
+      squarePoints[i][0],
+      squarePoints[i][1],
+      squarePoints[next][0],
+      squarePoints[next][1]
     );
   }
 }
 
 // Função para aplicar a reflexão nos pontos
-function reflectSquare() {
+function reflectSquare(eixo) {
   console.log("refletindo...");
-  const axis = document.getElementById("ref").value;
 
   if (!squarePoints || squarePoints.length === 0) {
     alert("Desenhe o quadrado primeiro.");
     return;
   }
 
-  squarePoints = squarePoints.map((p) => {
-    switch (axis) {
-      case "x":
-        return { x: p.x, y: -p.y };
-      case "y":
-        return { x: -p.x, y: p.y };
-      case "origem":
-        return { x: -p.x, y: -p.y };
-      default:
-        return p;
-    }
+  // Verifica se a reflexão é em X ou Y
+  let reflexaoMatrix;
+  if (eixo === "x") {
+    // Matriz de reflexão em X
+    reflexaoMatrix = [
+      [1, 0, 0], // Escala no eixo X
+      [0, -1, 0], // Escala no eixo Y
+      [0, 0, 1], // Coordenada homogênea
+    ];
+  } else if (eixo === "y") {
+    // Matriz de reflexão em Y
+    reflexaoMatrix = [
+      [-1, 0, 0], // Escala no eixo X
+      [0, 1, 0], // Escala no eixo Y
+      [0, 0, 1], // Coordenada homogênea
+    ];
+  }
+
+  // Aplica a reflexão nos pontos
+  squarePoints = squarePoints.map(([x, y, z]) => {
+    const point = [x, y, 1]; // Coordenadas homogêneas (x, y, 1)
+
+    // Multiplicação da matriz de reflexão pelo ponto
+    const newX =
+      reflexaoMatrix[0][0] * point[0] +
+      reflexaoMatrix[0][1] * point[1] +
+      reflexaoMatrix[0][2] * point[2];
+    const newY =
+      reflexaoMatrix[1][0] * point[0] +
+      reflexaoMatrix[1][1] * point[1] +
+      reflexaoMatrix[1][2] * point[2];
+    const newZ =
+      reflexaoMatrix[2][0] * point[0] +
+      reflexaoMatrix[2][1] * point[1] +
+      reflexaoMatrix[2][2] * point[2];
+
+    return [newX, newY, newZ];
+  });
+
+  // Redesenha a figura refletida
+  clearCanvas();
+  for (let i = 0; i < 4; i++) {
+    const next = (i + 1) % 4;
+    Line(
+      squarePoints[i][0],
+      squarePoints[i][1],
+      squarePoints[next][0],
+      squarePoints[next][1]
+    );
+  }
+}
+
+// Função para aplicar o cisalhamento
+function applyShear() {
+  const eixo = document.getElementById("cisalhamentoEixo").value;
+  const shx = parseFloat(document.getElementById("shx").value);
+  const shy = parseFloat(document.getElementById("shy").value);
+
+  // Define valores padrão como 0 se o campo estiver desabilitado
+  const a = document.getElementById("shx").disabled ? 0 : shx;
+  const b = document.getElementById("shy").disabled ? 0 : shy;
+
+  // Matriz geral de cisalhamento
+  const shearMatrix = [
+    [1, a, 0],
+    [b, 1, 0],
+    [0, 0, 1],
+  ];
+
+  squarePoints = squarePoints.map(([x, y, z]) => {
+    const point = [x, y, 1]; // Coordenadas homogêneas
+    const newX = shearMatrix[0][0] * point[0] + shearMatrix[0][1] * point[1];
+    const newY = shearMatrix[1][0] * point[0] + shearMatrix[1][1] * point[1];
+    return [newX, newY, 1];
   });
 
   clearCanvas();
   for (let i = 0; i < 4; i++) {
     const next = (i + 1) % 4;
     Line(
-      squarePoints[i].x,
-      squarePoints[i].y,
-      squarePoints[next].x,
-      squarePoints[next].y
+      squarePoints[i][0],
+      squarePoints[i][1],
+      squarePoints[next][0],
+      squarePoints[next][1]
     );
   }
 }
@@ -550,6 +625,35 @@ function setupMouseCoordsTracker() {
     )}, ${coordY.toFixed(0)})`;
   });
 }
+
+// ============================
+// FUNÇÃO PARA MANIPULAR O SELECT DE CISALHAMENTO (FRONT-END)
+// ============================
+function updateCisalhamentoEixo() {
+  const eixo = document.getElementById("cisalhamentoEixo").value;
+
+  // Se for cisalhamento em X, desabilita o campo shy
+  if (eixo === "cisX") {
+    document.getElementById("shx").disabled = false;
+    document.getElementById("shy").disabled = true;
+  }
+  // Se for cisalhamento em Y, desabilita o campo shx
+  else if (eixo === "cisY") {
+    document.getElementById("shx").disabled = true;
+    document.getElementById("shy").disabled = false;
+  }
+  // Se for cisalhamento em X e Y, habilita ambos os campos
+  else if (eixo === "cisXY") {
+    document.getElementById("shx").disabled = false;
+    document.getElementById("shy").disabled = false;
+  }
+}
+
+// Função chamada ao carregar a página para definir o comportamento inicial do select de cisalhamento
+// OBS: Não aplica transformação, é meramente de uso para o dinamismo do front-end
+window.onload = function () {
+  updateCisalhamentoEixo(); // Chama a função para aplicar a configuração padrão
+};
 
 setupMouseCoordsTracker();
 

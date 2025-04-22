@@ -318,17 +318,13 @@
               placeholder="CX"
             />
           </div>
-          <select class="mt-3 form-select" id="" onchange="changeTransformer()">
-            <option value="rotX">Em X</option>
-            <option value="rotY">Em Y</option>
-          </select>
           <button onclick="rotateSquare()">Aplicar Transformação</button>
         </div>
 
         <div id="reflexao" style="display: none">
           <label>Em:</label>
-          <input type="text" id="ref" value="x" placeholder="CX" />
-          <button onclick="reflectSquare()">Aplicar Transformação</button>
+          <button onclick="reflectSquare('x')">Reflexão em X</button>
+          <button onclick="reflectSquare('y')">Reflexão em Y</button>
         </div>
 
         <div id="cisalhamento" style="display: none">
@@ -336,7 +332,7 @@
           <input
             class="w-50"
             type="number"
-            id="cx"
+            id="shx"
             value="0"
             placeholder="CX"
           />
@@ -345,17 +341,22 @@
           <input
             class="w-50"
             type="number"
-            id="cy"
+            id="shy"
             value="0"
             placeholder="CY"
           />
 
-          <select class="form-select mt-3" id="" onchange="changeTransformer()">
+          <select
+            class="form-select mt-3"
+            id="cisalhamentoEixo"
+            onchange="updateCisalhamentoEixo()"
+          >
             <option value="cisX">Em X</option>
             <option value="cisY">Em Y</option>
             <option value="cisXY">Em X e Y</option>
           </select>
-          <button onclick="drawFigure()">Aplicar Transformação</button>
+
+          <button onclick="applyShear()">Aplicar Transformação</button>
         </div>
 
         <h2 class="fs-6 mt-3">Historico</h2>
