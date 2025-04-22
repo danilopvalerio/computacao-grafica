@@ -61,6 +61,7 @@
               <option value="line">Reta</option>
               <option value="circle">Círculo</option>
               <option value="cube">Quadrado</option>
+              <option value="quad">Quadrilátero</option>
             </select>
           </div>
 
@@ -180,53 +181,42 @@
           <div id="cubeParams" style="display: none">
             <div class="row g-2 mb-2">
               <div class="col-12">
-                <label class="form-label">Lado:</label
-                ><input
+                <label class="form-label">Lado:</label>
+                <input
                   class="form-control"
                   id="lado"
-                  value="0"
+                  value="50"
                   placeholder="Lado"
-                />
-              </div>
-              <div class="col-6">
-                <label class="form-label">A:</label
-                ><input
-                  class="form-control"
-                  id="A"
-                  value="(0,0)"
-                  placeholder="A"
-                />
-              </div>
-              <div class="col-6">
-                <label class="form-label">B:</label
-                ><input
-                  class="form-control"
-                  id="B"
-                  value="(0,50)"
-                  placeholder="B"
-                />
-              </div>
-              <div class="col-6">
-                <label class="form-label">C:</label
-                ><input
-                  class="form-control"
-                  id="C"
-                  value="(50,50)"
-                  placeholder="C"
-                />
-              </div>
-              <div class="col-6">
-                <label class="form-label">D:</label
-                ><input
-                  class="form-control"
-                  id="D"
-                  value="(50,0)"
-                  placeholder="D"
                 />
               </div>
             </div>
             <button class="btn btn-primary w-100 mb-3" onclick="drawFigure()">
-              Desenhar Cubo
+              Desenhar Quadrado
+            </button>
+          </div>
+
+          <!-- Quadrilátero -->
+          <div id="quadParams" style="display: none">
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label class="form-label">A (x,y):</label>
+                <input class="form-control" id="A" value="(0,0)" />
+              </div>
+              <div class="col-6">
+                <label class="form-label">B (x,y):</label>
+                <input class="form-control" id="B" value="(50,0)" />
+              </div>
+              <div class="col-6">
+                <label class="form-label">C (x,y):</label>
+                <input class="form-control" id="C" value="(50,50)" />
+              </div>
+              <div class="col-6">
+                <label class="form-label">D (x,y):</label>
+                <input class="form-control" id="D" value="(0,50)" />
+              </div>
+            </div>
+            <button class="btn btn-primary w-100 mb-3" onclick="drawFigure()">
+              Desenhar Quadrilátero
             </button>
           </div>
 
@@ -242,6 +232,8 @@
       </div>
 
       <div class="main-content">
+        <button class="m-4" style="width: 150px">Alternar para 3D</button>
+
         <canvas id="canvas" height="500" width="500"></canvas>
         <p class="coords" id="mouseCoords">Coordenadas: (0, 0)</p>
       </div>
@@ -319,6 +311,7 @@
             />
           </div>
           <button onclick="rotateSquare()">Aplicar Transformação</button>
+          <button onclick="animacaoRotacao(this)">Animação</button>
         </div>
 
         <div id="reflexao" style="display: none">

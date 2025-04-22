@@ -263,11 +263,13 @@ function CircleTrigonometric(cx, cy, radius) {
 
 // Desenha quadrado baseado em lado ou pontos A, B, C, D
 function drawSquare() {
+  const figure = document.getElementById("figureSelect").value;
   const lado = parseFloat(document.getElementById("lado").value);
   document.getElementById("lineAlgorithm").value = "dda";
+
   let points;
 
-  if (lado > 0) {
+  if (lado > 0 && figure === "cube") {
     const centerX = 0;
     const centerY = 0;
     const halfSize = lado / 2;
@@ -323,6 +325,8 @@ function changeFigure() {
     figure === "circle" ? "block" : "none";
   document.getElementById("cubeParams").style.display =
     figure === "cube" ? "block" : "none";
+  document.getElementById("quadParams").style.display =
+    figure === "quad" ? "block" : "none";
 }
 
 // Executa o desenho com base na figura selecionada
@@ -351,7 +355,7 @@ function drawFigure() {
     } else if (algorithm === "trigonometric") {
       CircleTrigonometric(cx, cy, radius);
     }
-  } else if (figure === "cube") {
+  } else if (figure === "cube" || figure === "quad") {
     drawSquare();
   }
 }
@@ -500,6 +504,24 @@ function rotateSquare() {
       squarePoints[next][0],
       squarePoints[next][1]
     );
+  }
+}
+
+let animando = false;
+let intervaloRotacao;
+
+function animacaoRotacao(btn) {
+  if (!animando) {
+    animando = true;
+    btn.textContent = "Parar rotação";
+    intervaloRotacao = setInterval(() => {
+      document.getElementById("ang").value = "1";
+      rotateSquare();
+    }, 10);
+  } else {
+    animando = false;
+    clearInterval(intervaloRotacao);
+    btn.textContent = "Animação";
   }
 }
 
