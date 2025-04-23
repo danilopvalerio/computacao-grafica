@@ -215,18 +215,23 @@
             <div class="row">
               <!-- Controles Eixo X -->
               <div class="col-12">
-                <span class="axis-color x-axis"></span>
                 <span>Eixo X</span>
                 <div class="row justify-content-center">
                   <button
                     class="mb-1 col-3"
-                    onclick="atualizarRotacao('x', -15)"
+                    onmousedown="startContinuousRotation('x', 1)"
+                    onmouseup="stopContinuousRotation()"
+                    ontouchstart="startContinuousRotation('x', 1)"
+                    ontouchend="stopContinuousRotation()"
                   >
                     ↺
                   </button>
                   <button
                     class="mb-1 col-3"
-                    onclick="atualizarRotacao('x', 15)"
+                    onmousedown="startContinuousRotation('x', -1)"
+                    onmouseup="stopContinuousRotation()"
+                    ontouchstart="startContinuousRotation('x', -1)"
+                    ontouchend="stopContinuousRotation()"
                   >
                     ↻
                   </button>
@@ -235,18 +240,24 @@
 
               <!-- Controles Eixo Y -->
               <div class="col-12">
-                <span class="axis-color y-axis"></span>
                 <span>Eixo Y</span>
                 <div class="row justify-content-center">
                   <button
                     class="mb-1 col-3"
-                    onclick="atualizarRotacao('y', -15)"
+                    class="mb-1 col-3"
+                    onmousedown="startContinuousRotation('y', 1)"
+                    onmouseup="stopContinuousRotation()"
+                    ontouchstart="startContinuousRotation('y', 1)"
+                    ontouchend="stopContinuousRotation()"
                   >
                     ↺
                   </button>
                   <button
                     class="mb-1 col-3"
-                    onclick="atualizarRotacao('y', 15)"
+                    onmousedown="startContinuousRotation('y', -1)"
+                    onmouseup="stopContinuousRotation()"
+                    ontouchstart="startContinuousRotation('y', -1)"
+                    ontouchend="stopContinuousRotation()"
                   >
                     ↻
                   </button>
@@ -255,18 +266,24 @@
 
               <!-- Controles Eixo Z -->
               <div class="col-12">
-                <span class="axis-color z-axis"></span>
                 <span>Eixo Z</span>
                 <div class="row justify-content-center">
                   <button
                     class="mb-1 col-3"
-                    onclick="atualizarRotacao('z', -15)"
+                    class="mb-1 col-3"
+                    onmousedown="startContinuousRotation('z', 1)"
+                    onmouseup="stopContinuousRotation()"
+                    ontouchstart="startContinuousRotation('z', 1)"
+                    ontouchend="stopContinuousRotation()"
                   >
                     ↺
                   </button>
                   <button
                     class="mb-1 col-3"
-                    onclick="atualizarRotacao('z', 15)"
+                    onmousedown="startContinuousRotation('z', -1)"
+                    onmouseup="stopContinuousRotation()"
+                    ontouchstart="startContinuousRotation('z', -1)"
+                    ontouchend="stopContinuousRotation()"
                   >
                     ↻
                   </button>
