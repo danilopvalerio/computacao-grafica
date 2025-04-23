@@ -277,7 +277,9 @@ function drawShape(vertices, edges, color = "black") {
 }
 
 /**
- * Desenha o cubo 3D
+ * Pega o valor que você digitou no input (cube-size)
+ * Transforma ele em número (caso esteja como string)
+ *Usa esse valor para criar os vértices do cubo
  */
 function drawCube() {
   const transformedVertices = applyTransformations(cubePoints);
@@ -289,20 +291,41 @@ function drawCube() {
  * @param {number} size - Tamanho da aresta do cubo
  */
 function createCube(size) {
-  const halfSize = size / 2;
-  cubePoints = [
-    // Face frontal
-    [-halfSize, -halfSize, halfSize, 1],
-    [halfSize, -halfSize, halfSize, 1],
-    [halfSize, halfSize, halfSize, 1],
-    [-halfSize, halfSize, halfSize, 1],
+  const checkbox = document.getElementById("centro-vertice");
+  const centroNaQuina = checkbox.checked;
 
-    // Face traseira
-    [-halfSize, -halfSize, -halfSize, 1],
-    [halfSize, -halfSize, -halfSize, 1],
-    [halfSize, halfSize, -halfSize, 1],
-    [-halfSize, halfSize, -halfSize, 1],
+  // Resetar rotações
+  rotationX = 0;
+  rotationY = 0;
+  rotationZ = 0;
+
+  let startX = 0;
+  let startY = 0;
+  let startZ = 0;
+
+  if (!centroNaQuina) {
+    // Se não estiver marcado, o centro do cubo fica na origem
+    startX = -size / 2;
+    startY = -size / 2;
+    startZ = -size / 2;
+  }
+  // Se estiver marcado, o canto do cubo já será na origem (startX = 0, etc.)
+
+  cubePoints = [
+    // Frente (z + size)
+    [startX, startY, startZ + size, 1],
+    [startX + size, startY, startZ + size, 1],
+    [startX + size, startY + size, startZ + size, 1],
+    [startX, startY + size, startZ + size, 1],
+
+    // Trás (z)
+    [startX, startY, startZ, 1],
+    [startX + size, startY, startZ, 1],
+    [startX + size, startY + size, startZ, 1],
+    [startX, startY + size, startZ, 1],
   ];
+
+  drawScene();
 }
 
 // ====================================================================================
@@ -396,7 +419,7 @@ function draw3DFigure() {
 
   // Aplicar translação (posicionamento do cubo)
   cubePoints = cubePoints.map((vertex) => {
-    return [vertex[0] + cx, vertex[1] + cy, vertex[2] + cz, 1];
+    return [vertex[0] + cx / 2, vertex[1] + cy / 2, vertex[2] + cz / 2, 1];
   });
 
   drawScene();
@@ -419,14 +442,12 @@ function atualizarRotacao(eixo, valor) {
  * Animação de rotação automática
  */
 function animarRotacao() {
-  rotationX += 5;
-  rotationY += 5;
-  rotationZ += 5;
+  rotationY += 1;
 
   drawScene();
 
-  if (rotationX < 360) {
-    setTimeout(animarRotacao, 50);
+  if (rotationY < 360) {
+    setTimeout(animarRotacao, 16);
   }
 }
 
