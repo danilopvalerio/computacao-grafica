@@ -277,7 +277,7 @@ function drawShape(vertices, edges, color = "black") {
 }
 
 /**
- * Pega o valor que você digitou no input (cube-size)
+ * Pega o valor digitado no input (cube-size)
  * Transforma ele em número (caso esteja como string)
  *Usa esse valor para criar os vértices do cubo
  */
@@ -384,6 +384,9 @@ function drawScene() {
     // Desenhar cubo 3D
     drawCube();
   }
+
+  // Atualizar informações da figura
+  updateFigureInfo3D();
 }
 
 // ====================================================================================
@@ -835,6 +838,192 @@ function addToHistory(text) {
   entry.textContent = text;
   historyDiv.appendChild(entry);
   historyDiv.scrollTop = historyDiv.scrollHeight;
+}
+
+// ====================================================================================
+// OBTENÇÃO DE INFORMAÇÕES SOBRE AS FIGURAS
+// ====================================================================================
+/**
+ * Atualiza as informações da figura 3D atual
+ * Adaptada para trabalhar com o formato de dados atual (arrays de pontos)
+ */
+function updateFigureInfo3D() {
+  const infoContainer = document.getElementById("figuraInfo3D");
+  infoContainer.innerHTML = "";
+
+  const figureSelect = document.getElementById("figureSelect3D").value;
+
+  if (figureSelect === "cube3d") {
+    // Calcular tamanho do cubo (distância entre vértices opostos)
+    const size = Math.abs(cubePoints[0][0] - cubePoints[1][0]);
+
+    // Calcular o centro do cubo
+    const centerX = (cubePoints[0][0] + cubePoints[6][0]) / 2;
+    const centerY = (cubePoints[0][1] + cubePoints[6][1]) / 2;
+    const centerZ = (cubePoints[0][2] + cubePoints[6][2]) / 2;
+
+    // Verificar se o cubo foi deformado por transformações
+    const isRegularCube = checkIfRegularCube();
+    const volume = isRegularCube ? size * size * size : calculateCubeVolume();
+
+    const infoHTML = `
+      <p><strong>Tipo:</strong> Cubo 3D</p>
+      <p><strong>Tamanho:</strong> ${size.toFixed(2)}px</p>
+      <p><strong>Centro:</strong> (${centerX.toFixed(2)}, ${centerY.toFixed(
+      2
+    )}, ${centerZ.toFixed(2)})</p>
+      <p><strong class="vertex-info">Vértices:</strong> 8</p>
+      <p><strong class="edge-info">Arestas:</strong> 12</p>
+      <p><strong>Faces:</strong> 6</p>
+      <p><strong>Volume:</strong> ${volume.toFixed(2)} u³</p>
+    `;
+
+    infoContainer.innerHTML = infoHTML;
+  } else if (figureSelect === "line3d") {
+    const p1 = linePoints[0];
+    const p2 = linePoints[1];
+
+    // Cálculo do comprimento da linha 3D
+    const length = Math.sqrt(
+      Math.pow(p2[0] - p1[0], 2) +
+        Math.pow(p2[1] - p1[1], 2) +
+        Math.pow(p2[2] - p1[2], 2)
+    );
+
+    const infoHTML = `
+      <p><strong>Tipo:</strong> Reta 3D</p>
+      <p><strong>Ponto A:</strong> (${p1[0]}, ${p1[1]}, ${p1[2]})</p>
+      <p><strong>Ponto B:</strong> (${p2[0]}, ${p2[1]}, ${p2[2]})</p>
+      <p><strong>Comprimento:</strong> ${length.toFixed(2)} u</p>
+      <p><strong>Ângulo XY:</strong> ${calculateAngleFromArrays(
+        p1,
+        p2,
+        "xy"
+      ).toFixed(2)}°</p>
+      <p><strong>Ângulo XZ:</strong> ${calculateAngleFromArrays(
+        p1,
+        p2,
+        "xz"
+      ).toFixed(2)}°</p>
+      <p><strong>Ângulo YZ:</strong> ${calculateAngleFromArrays(
+        p1,
+        p2,
+        "yz"
+      ).toFixed(2)}°</p>
+    `;
+
+    infoContainer.innerHTML = infoHTML;
+  }
+}
+
+/**
+ * Calcula o ângulo entre dois pontos em um plano específico
+ * Adaptada para trabalhar com arrays de pontos
+ * @param {Array} p1 - Primeiro ponto [x, y, z, 1]
+ * @param {Array} p2 - Segundo ponto [x, y, z, 1]
+ * @param {string} plane - Plano de projeção ('xy', 'xz' ou 'yz')
+ * @returns {number} Ângulo em graus
+ */
+function calculateAngleFromArrays(p1, p2, plane) {
+  let dx, dy;
+
+  if (plane === "xy") {
+    dx = p2[0] - p1[0]; // x
+    dy = p2[1] - p1[1]; // y
+  } else if (plane === "xz") {
+    dx = p2[0] - p1[0]; // x
+    dy = p2[2] - p1[2]; // z
+  } else {
+    // yz
+    dx = p2[1] - p1[1]; // y
+    dy = p2[2] - p1[2]; // z
+  }
+
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  return angle;
+}
+
+/**
+ * Verifica se o cubo ainda mantém formato regular após transformações
+ * @returns {boolean} true se o cubo for regular, false caso contrário
+ */
+function checkIfRegularCube() {
+  // Verificar se todas as arestas têm o mesmo comprimento
+  const edgeLengths = [];
+
+  // Verificar comprimento das arestas horizontais da face frontal
+  const frontEdge = Math.sqrt(
+    Math.pow(cubePoints[1][0] - cubePoints[0][0], 2) +
+      Math.pow(cubePoints[1][1] - cubePoints[0][1], 2) +
+      Math.pow(cubePoints[1][2] - cubePoints[0][2], 2)
+  );
+
+  // Verificar comprimento das arestas verticais da face frontal
+  const frontVertical = Math.sqrt(
+    Math.pow(cubePoints[3][0] - cubePoints[0][0], 2) +
+      Math.pow(cubePoints[3][1] - cubePoints[0][1], 2) +
+      Math.pow(cubePoints[3][2] - cubePoints[0][2], 2)
+  );
+
+  // Verificar profundidade (distância entre face frontal e traseira)
+  const depth = Math.sqrt(
+    Math.pow(cubePoints[4][0] - cubePoints[0][0], 2) +
+      Math.pow(cubePoints[4][1] - cubePoints[0][1], 2) +
+      Math.pow(cubePoints[4][2] - cubePoints[0][2], 2)
+  );
+
+  // Tolerância para comparação de ponto flutuante
+  const epsilon = 0.01;
+
+  // Se todas as dimensões forem aproximadamente iguais, o cubo é regular
+  return (
+    Math.abs(frontEdge - frontVertical) < epsilon &&
+    Math.abs(frontEdge - depth) < epsilon
+  );
+}
+
+/**
+ * Calcula o volume aproximado do cubo mesmo após transformações
+ * @returns {number} Volume do cubo
+ */
+function calculateCubeVolume() {
+  // Calcular os vetores que representam as arestas do cubo
+  const edge1 = [
+    cubePoints[1][0] - cubePoints[0][0],
+    cubePoints[1][1] - cubePoints[0][1],
+    cubePoints[1][2] - cubePoints[0][2],
+  ];
+
+  const edge2 = [
+    cubePoints[3][0] - cubePoints[0][0],
+    cubePoints[3][1] - cubePoints[0][1],
+    cubePoints[3][2] - cubePoints[0][2],
+  ];
+
+  const edge3 = [
+    cubePoints[4][0] - cubePoints[0][0],
+    cubePoints[4][1] - cubePoints[0][1],
+    cubePoints[4][2] - cubePoints[0][2],
+  ];
+
+  // Calcular o produto escalar para volume do paralelepípedo
+  // Volume = |a · (b × c)|
+
+  // Calcular o produto vetorial b × c
+  const crossProduct = [
+    edge2[1] * edge3[2] - edge2[2] * edge3[1],
+    edge2[2] * edge3[0] - edge2[0] * edge3[2],
+    edge2[0] * edge3[1] - edge2[1] * edge3[0],
+  ];
+
+  // Calcular o produto escalar a · (b × c)
+  const volume = Math.abs(
+    edge1[0] * crossProduct[0] +
+      edge1[1] * crossProduct[1] +
+      edge1[2] * crossProduct[2]
+  );
+
+  return volume;
 }
 
 // ====================================================================================

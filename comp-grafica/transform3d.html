@@ -299,10 +299,7 @@
 
             <!-- Botão de animação -->
             <div class="mt-3">
-              <button
-                class="btn btn-success"
-                onclick="animarRotacao(), clearCanvas3D()"
-              >
+              <button class="btn btn-success" onclick="animarRotacao()">
                 Animar Rotação
               </button>
             </div>
@@ -455,6 +452,16 @@
           style="height: 380px; width: 190px; overflow-y: auto"
         >
           <!-- Histórico de transformações será exibido aqui -->
+        </div>
+
+        <h2 class="fs-6 mt-3">Informações da Figura</h2>
+        <div
+          id="figuraInfo3D"
+          class="bg-light p-2 rounded"
+          style="height: 200px; width: 190px; overflow-y: auto"
+        >
+          <!-- Informações sobre vértices, arestas, etc serão exibidas aqui -->
+          <p class="small mb-1">Nenhuma figura desenhada</p>
         </div>
       </div>
     </div>
