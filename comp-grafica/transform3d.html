@@ -216,7 +216,7 @@
           </div>
 
           <div class="mb-4 text-center">
-            <h2 class="fs-5 text-center mb-3">Controle dos Eixos</h2>
+            <h2 class="fs-5 text-center mb-3 mt-4">Controle dos Eixos</h2>
 
             <div class="row">
               <!-- Controles Eixo X -->
@@ -313,6 +313,149 @@
       <div class="main-content">
         <canvas id="canvas3D" width="500" height="500"></canvas>
         <p class="coords" id="mouseCoords3D">Coordenadas: (0, 0)</p>
+      </div>
+
+      <div
+        class="sidebar gradient-custom-strong p-3 pt-4 m-3 transformer-header"
+      >
+        <h2 class="fs-5">Transformações 3D</h2>
+
+        <select
+          class="mt-3 form-select"
+          id="transformSelect3D"
+          onchange="changeTransformer3D()"
+        >
+          <option value="translacao3d">Translação</option>
+          <option value="escala3d">Escala</option>
+          <option value="rotacao3d">Rotação</option>
+          <option value="reflexao3d">Reflexão</option>
+          <option value="cisalhamento3d">Cisalhamento</option>
+        </select>
+
+        <!-- Translação 3D -->
+        <div id="translacao3d">
+          <div class="row g-2 mt-3">
+            <div class="col-4">
+              <label class="form-label">tx:</label>
+              <input class="form-control" type="number" id="tx3d" value="0" />
+            </div>
+            <div class="col-4">
+              <label class="form-label">ty:</label>
+              <input class="form-control" type="number" id="ty3d" value="0" />
+            </div>
+            <div class="col-4">
+              <label class="form-label">tz:</label>
+              <input class="form-control" type="number" id="tz3d" value="0" />
+            </div>
+          </div>
+          <button
+            class="btn btn-primary mt-2 w-100"
+            onclick="applyTranslation3D()"
+          >
+            Aplicar Translação
+          </button>
+        </div>
+
+        <!-- Escala 3D -->
+        <div id="escala3d" style="display: none">
+          <div class="row g-2 mt-3">
+            <div class="col-4">
+              <label class="form-label">sx:</label>
+              <input class="form-control" type="number" id="sx3d" value="1" />
+            </div>
+            <div class="col-4">
+              <label class="form-label">sy:</label>
+              <input class="form-control" type="number" id="sy3d" value="1" />
+            </div>
+            <div class="col-4">
+              <label class="form-label">sz:</label>
+              <input class="form-control" type="number" id="sz3d" value="1" />
+            </div>
+          </div>
+          <button class="btn btn-primary mt-2 w-100" onclick="applyScale3D()">
+            Aplicar Escala
+          </button>
+        </div>
+
+        <!-- Rotação 3D -->
+        <div id="rotacao3d" style="display: none">
+          <div class="mt-3">
+            <label class="form-label">Ângulo (θ):</label>
+            <input class="form-control" type="number" id="ang3d" value="0" />
+          </div>
+          <div class="mt-3">
+            <label class="form-label">Eixo:</label>
+            <select class="form-select" id="rotationAxis3D">
+              <option value="x">Eixo X</option>
+              <option value="y">Eixo Y</option>
+              <option value="z">Eixo Z</option>
+            </select>
+          </div>
+          <button
+            class="btn btn-primary mt-2 w-100"
+            onclick="applyRotation3D()"
+          >
+            Aplicar Rotação
+          </button>
+          <button
+            class="btn btn-success mt-2 w-100"
+            onclick="startRotationAnimation3D()"
+          >
+            Animação
+          </button>
+        </div>
+
+        <!-- Reflexão 3D -->
+        <div id="reflexao3d" style="display: none">
+          <label class="form-label mt-3">Plano de Reflexão:</label>
+          <select class="form-select" id="reflectionPlane3D">
+            <option value="xy">Plano XY</option>
+            <option value="xz">Plano XZ</option>
+            <option value="yz">Plano YZ</option>
+          </select>
+          <button
+            class="btn btn-primary mt-2 w-100"
+            onclick="applyReflection3D()"
+          >
+            Aplicar Reflexão
+          </button>
+        </div>
+
+        <!-- Cisalhamento 3D -->
+        <div id="cisalhamento3d" style="display: none">
+          <div class="mt-3">
+            <label class="form-label">Tipo:</label>
+            <select class="form-select" id="shearType3D">
+              <option value="xy">Em X (sobre Y)</option>
+              <option value="xz">Em X (sobre Z)</option>
+              <option value="yx">Em Y (sobre X)</option>
+              <option value="yz">Em Y (sobre Z)</option>
+              <option value="zx">Em Z (sobre X)</option>
+              <option value="zy">Em Z (sobre Y)</option>
+            </select>
+          </div>
+          <div class="mt-3">
+            <label class="form-label">Fator (sh):</label>
+            <input
+              class="form-control"
+              type="number"
+              id="shearFactor3D"
+              value="0"
+            />
+          </div>
+          <button class="btn btn-primary mt-2 w-100" onclick="applyShear3D()">
+            Aplicar Cisalhamento
+          </button>
+        </div>
+
+        <h2 class="fs-6 mt-3">Histórico</h2>
+        <div
+          id="historico3D"
+          class="bg-light p-2 rounded"
+          style="height: 380px; width: 190px; overflow-y: auto"
+        >
+          <!-- Histórico de transformações será exibido aqui -->
+        </div>
       </div>
     </div>
 

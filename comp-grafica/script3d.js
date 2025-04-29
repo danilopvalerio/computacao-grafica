@@ -468,10 +468,58 @@ function updateCanvas3D() {
  * Limpa a cena (reseta rotações)
  */
 function clearCanvas3D() {
+  // Resetar rotações
   rotationX = 0;
   rotationY = 0;
   rotationZ = 0;
 
+  // Resetar zoom
+  zoom = 100;
+
+  // Parar qualquer rotação contínua
+  stopContinuousRotation();
+
+  // Resetar pontos da linha para valores padrão
+  linePoints = [
+    [0, 0, 0, 1], // Ponto inicial
+    [0, 0, 0, 1], // Ponto final
+  ];
+
+  // Atualizar inputs da linha para valores padrão
+  document.getElementById("x1_3d").value = "10";
+  document.getElementById("y1_3d").value = "10";
+  document.getElementById("z1_3d").value = "10";
+  document.getElementById("x2_3d").value = "50";
+  document.getElementById("y2_3d").value = "15";
+  document.getElementById("z2_3d").value = "40";
+
+  // Resetar o cubo para o tamanho padrão
+  cubePoints = [
+    // Face frontal
+    [-50, -50, 50, 1], // Vértice 0
+    [50, -50, 50, 1], // Vértice 1
+    [50, 50, 50, 1], // Vértice 2
+    [-50, 50, 50, 1], // Vértice 3
+
+    // Face traseira
+    [-50, -50, -50, 1], // Vértice 4
+    [50, -50, -50, 1], // Vértice 5
+    [50, 50, -50, 1], // Vértice 6
+    [-50, 50, -50, 1], // Vértice 7
+  ];
+
+  // Resetar inputs do cubo para valores padrão
+  document.getElementById("cubeSize").value = "50";
+  document.getElementById("cx3d").value = "0";
+  document.getElementById("cy3d").value = "0";
+  document.getElementById("cz3d").value = "0";
+  document.getElementById("centro-vertice").checked = false;
+
+  // Limpar histórico de transformações
+  const historyDiv = document.getElementById("historico3D");
+  historyDiv.innerHTML = "";
+
+  // Desenhar cena limpa (apenas eixos)
   drawScene();
 }
 
@@ -522,6 +570,271 @@ function stopContinuousRotation() {
     clearInterval(rotationInterval);
     rotationInterval = null;
   }
+}
+
+function changeTransformer3D() {
+  const transformType = document.getElementById("transformSelect3D").value;
+
+  // Esconder todos os painéis de transformação
+  document.getElementById("translacao3d").style.display = "none";
+  document.getElementById("escala3d").style.display = "none";
+  document.getElementById("rotacao3d").style.display = "none";
+  document.getElementById("reflexao3d").style.display = "none";
+  document.getElementById("cisalhamento3d").style.display = "none";
+
+  // Mostrar apenas o painel selecionado
+  document.getElementById(transformType).style.display = "block";
+}
+
+// ====================================================================================
+// FUNÇÕES DE TRANSFORMAÇÃO 3D
+// ====================================================================================
+
+/**
+ * Cria matriz de translação 3D
+ * @param {number} tx - Translação em X
+ * @param {number} ty - Translação em Y
+ * @param {number} tz - Translação em Z
+ * @returns {Array} Matriz 4x4 de translação
+ */
+function createTranslationMatrix(tx, ty, tz) {
+  return [
+    [1, 0, 0, tx],
+    [0, 1, 0, ty],
+    [0, 0, 1, tz],
+    [0, 0, 0, 1],
+  ];
+}
+
+/**
+ * Cria matriz de escala 3D
+ * @param {number} sx - Escala em X
+ * @param {number} sy - Escala em Y
+ * @param {number} sz - Escala em Z
+ * @returns {Array} Matriz 4x4 de escala
+ */
+function createScaleMatrix(sx, sy, sz) {
+  return [
+    [sx, 0, 0, 0],
+    [0, sy, 0, 0],
+    [0, 0, sz, 0],
+    [0, 0, 0, 1],
+  ];
+}
+
+/**
+ * Cria matriz de reflexão 3D
+ * @param {string} plane - Plano de reflexão ('xy', 'xz' ou 'yz')
+ * @returns {Array} Matriz 4x4 de reflexão
+ */
+function createReflectionMatrix(plane) {
+  switch (plane) {
+    case "xy": // Reflexão no plano XY (inverte Z)
+      return [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, -1, 0],
+        [0, 0, 0, 1],
+      ];
+    case "xz": // Reflexão no plano XZ (inverte Y)
+      return [
+        [1, 0, 0, 0],
+        [0, -1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+      ];
+    case "yz": // Reflexão no plano YZ (inverte X)
+      return [
+        [-1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+      ];
+    default:
+      return createIdentityMatrix();
+  }
+}
+
+/**
+ * Cria matriz de cisalhamento 3D
+ * @param {string} type - Tipo de cisalhamento ('xy', 'xz', 'yx', 'yz', 'zx', 'zy')
+ * @param {number} sh - Fator de cisalhamento
+ * @returns {Array} Matriz 4x4 de cisalhamento
+ */
+function createShearMatrix(type, sh) {
+  switch (type) {
+    case "xy": // Cisalhamento em X sobre Y
+      return [
+        [1, sh, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+      ];
+    case "xz": // Cisalhamento em X sobre Z
+      return [
+        [1, 0, sh, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+      ];
+    case "yx": // Cisalhamento em Y sobre X
+      return [
+        [1, 0, 0, 0],
+        [sh, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+      ];
+    case "yz": // Cisalhamento em Y sobre Z
+      return [
+        [1, 0, 0, 0],
+        [0, 1, sh, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+      ];
+    case "zx": // Cisalhamento em Z sobre X
+      return [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [sh, 0, 1, 0],
+        [0, 0, 0, 1],
+      ];
+    case "zy": // Cisalhamento em Z sobre Y
+      return [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, sh, 1, 0],
+        [0, 0, 0, 1],
+      ];
+    default:
+      return createIdentityMatrix();
+  }
+}
+
+/**
+ * Cria matriz identidade 4x4
+ * @returns {Array} Matriz identidade
+ */
+function createIdentityMatrix() {
+  return [
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1],
+  ];
+}
+
+/**
+ * Aplica transformação aos pontos do cubo
+ * @param {Array} matrix - Matriz de transformação 4x4
+ */
+function applyTransformationToCube(matrix) {
+  cubePoints = cubePoints.map((point) => multiplyMatrixVector(matrix, point));
+  drawScene();
+}
+
+// ====================================================================================
+// FUNÇÕES DE INTERFACE PARA AS TRANSFORMAÇÕES
+// ====================================================================================
+
+function applyTranslation3D() {
+  const tx = parseFloat(document.getElementById("tx3d").value);
+  const ty = parseFloat(document.getElementById("ty3d").value);
+  const tz = parseFloat(document.getElementById("tz3d").value);
+
+  const translationMatrix = createTranslationMatrix(tx, ty, tz);
+  applyTransformationToCube(translationMatrix);
+
+  addToHistory(`\nTranslação: tx=${tx}, ty=${ty}, tz=${tz}`);
+}
+
+function applyScale3D() {
+  const sx = parseFloat(document.getElementById("sx3d").value);
+  const sy = parseFloat(document.getElementById("sy3d").value);
+  const sz = parseFloat(document.getElementById("sz3d").value);
+
+  const scaleMatrix = createScaleMatrix(sx, sy, sz);
+  applyTransformationToCube(scaleMatrix);
+
+  addToHistory(`\nEscala: sx=${sx}, sy=${sy}, sz=${sz}`);
+}
+
+function applyRotation3D() {
+  const angle = parseFloat(document.getElementById("ang3d").value);
+  const axis = document.getElementById("rotationAxis3D").value;
+
+  let rotationMatrix;
+  switch (axis) {
+    case "x":
+      rotationMatrix = createRotationXMatrix(angle);
+      break;
+    case "y":
+      rotationMatrix = createRotationYMatrix(angle);
+      break;
+    case "z":
+      rotationMatrix = createRotationZMatrix(angle);
+      break;
+  }
+
+  applyTransformationToCube(rotationMatrix);
+  addToHistory(`\nRotação: ${angle}° em torno do eixo ${axis.toUpperCase()}`);
+}
+
+function applyReflection3D() {
+  const plane = document.getElementById("reflectionPlane3D").value;
+  const reflectionMatrix = createReflectionMatrix(plane);
+  applyTransformationToCube(reflectionMatrix);
+
+  addToHistory(`\nReflexão no plano ${plane.toUpperCase()}`);
+}
+
+function applyShear3D() {
+  const type = document.getElementById("shearType3D").value;
+  const sh = parseFloat(document.getElementById("shearFactor3D").value);
+
+  const shearMatrix = createShearMatrix(type, sh);
+  applyTransformationToCube(shearMatrix);
+
+  addToHistory(`\nCisalhamento: tipo=${type}, fator=${sh}`);
+}
+
+function startRotationAnimation3D() {
+  const angle = parseFloat(document.getElementById("ang3d").value);
+  const axis = document.getElementById("rotationAxis3D").value;
+
+  let steps = 30;
+  let currentStep = 0;
+  const angleStep = angle / steps;
+
+  const animation = setInterval(() => {
+    if (currentStep >= steps) {
+      clearInterval(animation);
+      return;
+    }
+
+    let rotationMatrix;
+    switch (axis) {
+      case "x":
+        rotationMatrix = createRotationXMatrix(angleStep);
+        break;
+      case "y":
+        rotationMatrix = createRotationYMatrix(angleStep);
+        break;
+      case "z":
+        rotationMatrix = createRotationZMatrix(angleStep);
+        break;
+    }
+
+    applyTransformationToCube(rotationMatrix);
+    currentStep++;
+  }, 50);
+}
+
+function addToHistory(text) {
+  const historyDiv = document.getElementById("historico3D");
+  const entry = document.createElement("div");
+  entry.textContent = text;
+  historyDiv.appendChild(entry);
+  historyDiv.scrollTop = historyDiv.scrollHeight;
 }
 
 // ====================================================================================
