@@ -208,28 +208,26 @@ function CircleMidpoint(cx, cy, radius) {
   let x = 0;
   let y = radius;
   let d = 1 - radius;
+  let d_old = null;
 
-  while (y >= x) {
+  while (x < y + 2) {
     setPixel(x + cx, y + cy);
-    logIteration(x + cx, y + cy, d);
     setPixel(y + cx, x + cy);
-    logIteration(y + cx, x + cy, d);
-    setPixel(-x + cx, y + cy);
-    logIteration(-x + cx, y + cy, d);
-    setPixel(-y + cx, x + cy);
-    logIteration(-y + cx, x + cy, d);
-    setPixel(-x + cx, -y + cy);
-    logIteration(-x + cx, -y + cy, d);
-    setPixel(-y + cx, -x + cy);
-    logIteration(-y + cx, -x + cy, d);
-    setPixel(x + cx, -y + cy);
-    logIteration(x + cx, -y + cy, d);
     setPixel(y + cx, -x + cy);
-    logIteration(y + cx, -x + cy, d);
+    setPixel(x + cx, -y + cy);
+    setPixel(-x + cx, -y + cy);
+    setPixel(-y + cx, -x + cy);
+    setPixel(-y + cx, x + cy);
+    setPixel(-x + cx, y + cy);
 
+    if (d_old) {
+      logIteration(x + cx, y + cy, d_old);
+    }
     if (d < 0) {
+      d_old = d;
       d += 2 * x + 3;
     } else {
+      d_old = d;
       d += 2 * (x - y) + 5;
       y--;
     }
