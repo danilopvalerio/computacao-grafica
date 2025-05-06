@@ -470,25 +470,22 @@ function rotateSquare() {
 
   const angleRad = (-angleDegrees * Math.PI) / 180;
 
-  // Calcular o centro do quadrado
-  let centerX = 0,
-    centerY = 0;
-  for (const p of squarePoints) {
-    centerX += p[0];
-    centerY += p[1];
-  }
-  centerX /= squarePoints.length;
-  centerY /= squarePoints.length;
+  // O ponto de rotação será o primeiro ponto (A) do quadrado
+  const pivotX = squarePoints[0][0];
+  const pivotY = squarePoints[0][1];
 
   const cos = Math.cos(angleRad);
   const sin = Math.sin(angleRad);
 
-  // Aplicar rotação com translação implícita
-  squarePoints = squarePoints.map((p) => {
-    const dx = p[0] - centerX;
-    const dy = p[1] - centerY;
-    const xRot = dx * cos - dy * sin + centerX;
-    const yRot = dx * sin + dy * cos + centerY;
+  // Aplicar rotação em torno do ponto A
+  squarePoints = squarePoints.map((p, index) => {
+    // Não rotacionamos o próprio ponto A (pivô)
+    if (index === 0) return p;
+
+    const dx = p[0] - pivotX;
+    const dy = p[1] - pivotY;
+    const xRot = dx * cos - dy * sin + pivotX;
+    const yRot = dx * sin + dy * cos + pivotY;
     return [xRot, yRot, 1];
   });
 
@@ -504,7 +501,6 @@ function rotateSquare() {
     );
   }
 }
-
 let animando = false;
 let intervaloRotacao;
 
