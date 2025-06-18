@@ -70,10 +70,10 @@ function setPixelWorld(xw, yw) {
   }
   const ndcPoint = worldToNDC(xw, yw);
   const devicePoint = ndcToDevice(ndcPoint.x, ndcPoint.y);
-  setPixelDevice(devicePoint.x, devicePoint.y);
+  setPixel(devicePoint.x, devicePoint.y);
 }
 
-function setPixelDevice(dx, dy) {
+function setPixel(dx, dy) {
   let cor = "red";
   const useViewport = document.getElementById("viewport_toggle").checked;
 
