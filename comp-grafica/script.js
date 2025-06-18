@@ -1,59 +1,126 @@
-// ============================
-// VARIÁVEIS GLOBAIS
-// ============================
-let canva_width = 500;
-let canva_height = 500;
+/**
+ * @file script.js
+ * @description Implementação de algoritmos de Computação Gráfica para rasterização,
+ * transformações 2D e gerenciamento de pipeline de visualização (Mundo -> Viewport).
+ * @author UEPB - DC - CG (com anotações e explicações)
+ */
+
+// =========================================================================
+// == VARIÁVEIS GLOBAIS E ESTRUTURAS DE DADOS
+// =========================================================================
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
+// Objeto para armazenar as coordenadas da janela de visualização no mundo.
+let world = {};
+
+// Objeto para armazenar as coordenadas da viewport no dispositivo.
+let viewport = {};
+
+// Array para armazenar os vértices de um polígono (em coordenadas do mundo)
 let squarePoints = [];
 
-let matrizFigura = null;
-// ============================
-// FUNÇÕES PARA OBTENÇÃO DE DADOS DO FORMULÁRIO
-// ============================
+// =========================================================================
+// == PIPELINE DE VISUALIZAÇÃO (MUNDO -> TELA)
+// =========================================================================
 
-// Retorna um ponto a partir do valor de um input (ex: "(3,4)")
-const getPoint = (id) => {
-  const val = document.getElementById(id).value.trim();
-  const match = val.match(/\(?\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*\)?/);
-  if (match) {
-    return {
-      x: parseFloat(match[1]),
-      y: parseFloat(match[3]),
-    };
-  }
-  return null;
-};
-
-// ============================
-// FUNÇÕES DE GERENCIAMENTO DO CANVAS
-// ============================
-
-// Atualiza tamanho do canvas com base nos inputs
-function updateCanva() {
-  let largura = parseInt(document.getElementById("width").value);
-  let altura = parseInt(document.getElementById("height").value);
-
-  if (!isNaN(largura) && !isNaN(altura)) {
-    largura = Math.min(Math.max(largura, 100), 1000);
-    altura = Math.min(Math.max(altura, 100), 620);
-
-    canvas.width = largura;
-    canvas.height = altura;
-    canvas.style.backgroundColor = "white";
-  } else {
-    alert("Preencha os valores corretamente.");
-  }
-  drawAxis();
+function worldToNDC(xw, yw) {
+  const ndcX = (2 * (xw - world.xmin)) / (world.xmax - world.xmin) - 1;
+  const ndcY = (2 * (yw - world.ymin)) / (world.ymax - world.ymin) - 1;
+  return { x: ndcX, y: ndcY };
 }
 
-// Desenha os eixos X e Y no centro do canvas
-function drawAxis() {
+function ndcToDevice(ndcX, ndcY) {
+  const useViewport = document.getElementById("viewport_toggle").checked;
+  let vp = useViewport
+    ? viewport
+    : { xvmin: 0, yvmin: 0, xvmax: canvas.width, yvmax: canvas.height };
+  const deviceX = ((ndcX + 1) / 2) * (vp.xvmax - vp.xvmin) + vp.xvmin;
+  const deviceY = ((1 - ndcY) / 2) * (vp.yvmax - vp.yvmin) + vp.yvmin; // Inversão do eixo Y
+  return { x: deviceX, y: deviceY };
+}
+
+function deviceToWorld(dx, dy) {
+  const useViewport = document.getElementById("viewport_toggle").checked;
+  let vp = useViewport
+    ? viewport
+    : { xvmin: 0, yvmin: 0, xvmax: canvas.width, yvmax: canvas.height };
+  let ndcX = ((dx - vp.xvmin) / (vp.xvmax - vp.xvmin)) * 2 - 1;
+  let ndcY = (1 - (dy - vp.yvmin) / (vp.yvmax - vp.yvmin)) * 2 - 1;
+  const xw = ((ndcX + 1) / 2) * (world.xmax - world.xmin) + world.xmin;
+  const yw = ((ndcY + 1) / 2) * (world.ymax - world.ymin) + world.ymin;
+  return { x: xw, y: yw };
+}
+
+// =========================================================================
+// == FUNÇÕES DE DESENHO DE PIXEL (LÓGICA DE COR IMPLEMENTADA AQUI)
+// =========================================================================
+
+/**
+ * Desenha um pixel na tela a partir de uma coordenada do MUNDO.
+ * Esta função agora chama setPixelDevice para centralizar a lógica de cor.
+ */
+function setPixelWorld(xw, yw) {
+  const ndcPoint = worldToNDC(xw, yw);
+  const devicePoint = ndcToDevice(ndcPoint.x, ndcPoint.y);
+  // Chama a função de pixel de dispositivo, que contém a lógica de cor.
+  setPixelDevice(devicePoint.x, devicePoint.y);
+}
+
+/**
+ * **FUNÇÃO ATUALIZADA**
+ * Desenha um pixel na tela a partir de uma coordenada de DISPOSITIVO.
+ * AGORA, ela verifica se o pixel está dentro ou fora da viewport para mudar a cor.
+ */
+function setPixelDevice(dx, dy) {
+  let cor = "red"; // Cor padrão para dentro da viewport
+  const useViewport = document.getElementById("viewport_toggle").checked;
+
+  // Se a viewport estiver ativa, verificamos a posição do pixel
+  if (useViewport) {
+    if (
+      dx < viewport.xvmin ||
+      dx > viewport.xvmax ||
+      dy < viewport.yvmin ||
+      dy > viewport.yvmax
+    ) {
+      cor = "blue"; // Um tom de azul para a parte de fora
+    }
+  }
+
+  // Ignora pixels fora do canvas para evitar erros
+  if (dx < 0 || dx >= canvas.width || dy < 0 || dy >= canvas.height) {
+    return;
+  }
+
+  ctx.fillStyle = cor;
+  ctx.fillRect(Math.round(dx), Math.round(dy), 1, 1); // Mantém a largura do pixel
+}
+
+// =========================================================================
+// == FUNÇÕES DE GERENCIAMENTO DO CANVAS E DA CENA
+// =========================================================================
+
+function updateAndRedraw() {
+  canvas.width = parseInt(document.getElementById("width").value);
+  canvas.height = parseInt(document.getElementById("height").value);
+  world.xmin = parseFloat(document.getElementById("xw_min").value);
+  world.ymin = parseFloat(document.getElementById("yw_min").value);
+  world.xmax = parseFloat(document.getElementById("xw_max").value);
+  world.ymax = parseFloat(document.getElementById("yw_max").value);
+  viewport.xvmin = parseFloat(document.getElementById("xv_min").value);
+  viewport.yvmin = parseFloat(document.getElementById("yv_min").value);
+  viewport.xvmax = parseFloat(document.getElementById("xv_max").value);
+  viewport.yvmax = parseFloat(document.getElementById("yv_max").value);
+  drawFigure();
+}
+
+function clearCanvasAndDrawBase() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
-  ctx.strokeStyle = canvas.style.backgroundColor === "black";
+  ctx.strokeStyle = "#ADADAD";
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(centerX, 0);
@@ -61,173 +128,157 @@ function drawAxis() {
   ctx.moveTo(0, centerY);
   ctx.lineTo(canvas.width, centerY);
   ctx.stroke();
-}
 
-// Limpa o canvas e redesenha os eixos
-function clearCanvas() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawAxis();
-}
+  ctx.strokeStyle = "#E0E0E0";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  let p1_device = ndcToDevice(
+    worldToNDC(0, world.ymin).x,
+    worldToNDC(0, world.ymin).y
+  );
+  let p2_device = ndcToDevice(
+    worldToNDC(0, world.ymax).x,
+    worldToNDC(0, world.ymax).y
+  );
+  ctx.moveTo(p1_device.x, p1_device.y);
+  ctx.lineTo(p2_device.x, p2_device.y);
+  p1_device = ndcToDevice(
+    worldToNDC(world.xmin, 0).x,
+    worldToNDC(world.xmin, 0).y
+  );
+  p2_device = ndcToDevice(
+    worldToNDC(world.xmax, 0).x,
+    worldToNDC(world.xmax, 0).y
+  );
+  ctx.moveTo(p1_device.x, p1_device.y);
+  ctx.lineTo(p2_device.x, p2_device.y);
+  ctx.stroke();
 
-// ============================
-// FUNÇÕES PARA PIXEL E LOGS
-// ============================
-
-// Define o pixel no canvas na cor vermelha
-function setPixel(x, y) {
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  ctx.fillStyle = "red";
-  ctx.fillRect(centerX + x, centerY - y, 1, 1);
-}
-
-// Adiciona uma linha de log da iteração na tabela de logs
-function logIteration(x, y, d = null, k = null) {
-  const logContainer = document.getElementById("iterationLog");
-
-  if (!logContainer.querySelector("table")) {
-    logContainer.innerHTML = "";
-    const table = document.createElement("table");
-    table.style.width = "100%";
-    table.style.maxWidth = "600px";
-    table.style.borderCollapse = "collapse";
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th style="border: 1px solid black; padding: 8px;">${
-            d !== null ? "D" : "K"
-          }</th>
-          <th style="border: 1px solid black; padding: 8px;">X</th>
-          <th style="border: 1px solid black; padding: 8px;">Y</th>
-        </tr>
-      </thead>
-      <tbody></tbody>`;
-    logContainer.appendChild(table);
+  if (document.getElementById("viewport_toggle").checked) {
+    ctx.strokeStyle = "blue";
+    ctx.strokeRect(
+      viewport.xvmin,
+      viewport.yvmin,
+      viewport.xvmax - viewport.xvmin,
+      viewport.yvmax - viewport.yvmin
+    );
   }
-
-  const tbody = logContainer.querySelector("tbody");
-  const row = document.createElement("tr");
-  row.innerHTML = `
-    <td style="border: 1px solid black; padding: 8px;">${
-      d !== null ? d : k
-    }</td>
-    <td style="border: 1px solid black; padding: 8px;">${x}</td>
-    <td style="border: 1px solid black; padding: 8px;">${y}</td>`;
-  tbody.appendChild(row);
 }
 
-// Limpa a tabela de logs
-function clearLog() {
-  document.getElementById("iterationLog").innerHTML = "";
-}
+// =========================================================================
+// == ALGORITMOS DE RASTERIZAÇÃO DE PRIMITIVAS
+// =========================================================================
 
-// ============================
-// FUNÇÕES DE DESENHO DE RETAS
-// ============================
-
-// Algoritmo DDA para desenhar uma linha entre dois pontos
-function LineDDA(x0, y0, x1, y1) {
+function LineDDA(xw0, yw0, xw1, yw1) {
   clearLog();
-  const dx = x1 - x0;
-  const dy = y1 - y0;
-  const steps = Math.max(Math.abs(dx), Math.abs(dy));
-  const xIncrement = dx / steps;
-  const yIncrement = dy / steps;
-  let x = x0;
-  let y = y0;
+  const p0_device = ndcToDevice(worldToNDC(xw0, yw0).x, worldToNDC(xw0, yw0).y);
+  const p1_device = ndcToDevice(worldToNDC(xw1, yw1).x, worldToNDC(xw1, yw1).y);
+  let dx_device = p1_device.x - p0_device.x;
+  let dy_device = p1_device.y - p0_device.y;
+  const steps = Math.max(Math.abs(dx_device), Math.abs(dy_device));
+  const xInc_device = dx_device / steps;
+  const yInc_device = dy_device / steps;
+  const xInc_world = (xw1 - xw0) / steps;
+  const yInc_world = (yw1 - yw0) / steps;
+  let x_device = p0_device.x;
+  let y_device = p0_device.y;
+  let x_world = xw0;
+  let y_world = yw0;
 
   for (let i = 0; i <= steps; i++) {
-    setPixel(Math.round(x), Math.round(y));
-    logIteration(Math.round(x), Math.round(y), null, i);
-    x += xIncrement;
-    y += yIncrement;
+    setPixelDevice(x_device, y_device);
+    logIteration(x_world, y_world, null, i);
+    x_device += xInc_device;
+    y_device += yInc_device;
+    x_world += xInc_world;
+    y_world += yInc_world;
   }
 }
 
-// Algoritmo de Bresenham para desenhar linha entre dois pontos (1º e 2º octante)
-function LineBresenham(x1, y1, x2, y2) {
+function LineBresenham(xw0, yw0, xw1, yw1) {
   clearLog();
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  let ds, incE, incNE;
-  let x = x1,
-    y = y1;
-  setPixel(x, y);
-  logIteration(x, y, 0);
+  const p0_device = ndcToDevice(worldToNDC(xw0, yw0).x, worldToNDC(xw0, yw0).y);
+  const p1_device = ndcToDevice(worldToNDC(xw1, yw1).x, worldToNDC(xw1, yw1).y);
+  let x = Math.round(p0_device.x);
+  let y = Math.round(p0_device.y);
+  const x_end = Math.round(p1_device.x);
+  const y_end = Math.round(p1_device.y);
+  const dx = Math.abs(x_end - x);
+  const dy = Math.abs(y_end - y);
+  const sx = x < x_end ? 1 : -1;
+  const sy = y < y_end ? 1 : -1;
+  const isSteep = dy > dx;
 
-  if (Math.abs(dy) < Math.abs(dx)) {
-    ds = 2 * dy - dx;
-    incE = 2 * dy;
-    incNE = 2 * (dy - dx);
-    while (x < x2) {
-      logIteration(x, y, ds);
-      if (ds <= 0) {
-        ds += incE;
+  if (isSteep) {
+    let d = 2 * dx - dy;
+    let incE = 2 * dx;
+    let incNE = 2 * (dx - dy);
+    setPixelDevice(x, y);
+    logIteration(deviceToWorld(x, y).x, deviceToWorld(x, y).y, "start", 0);
+    while (y !== y_end) {
+      let d_for_log = d;
+      y += sy;
+      if (d <= 0) {
+        d += incE;
       } else {
-        ds += incNE;
-        y += 1;
+        x += sx;
+        d += incNE;
       }
-      x += 1;
-      setPixel(x, y);
+      setPixelDevice(x, y);
+      logIteration(
+        deviceToWorld(x, y).x,
+        deviceToWorld(x, y).y,
+        d_for_log,
+        null
+      );
     }
   } else {
-    ds = 2 * dx - dy;
-    let incN = 2 * dx;
-    incNE = 2 * (dx - dy);
-    while (y < y2) {
-      logIteration(x, y, ds);
-      if (ds <= 0) {
-        ds += incN;
+    let d = 2 * dy - dx;
+    let incE = 2 * dy;
+    let incNE = 2 * (dy - dx);
+    setPixelDevice(x, y);
+    logIteration(deviceToWorld(x, y).x, deviceToWorld(x, y).y, "start", 0);
+    while (x !== x_end) {
+      let d_for_log = d;
+      x += sx;
+      if (d <= 0) {
+        d += incE;
       } else {
-        ds += incNE;
-        x += 1;
+        y += sy;
+        d += incNE;
       }
-      y += 1;
-      setPixel(x, y);
+      setPixelDevice(x, y);
+      logIteration(
+        deviceToWorld(x, y).x,
+        deviceToWorld(x, y).y,
+        d_for_log,
+        null
+      );
     }
   }
 }
 
-// Função auxiliar que escolhe o algoritmo de linha
-function Line(x0, y0, x1, y1) {
-  const algorithm = document.getElementById("lineAlgorithm").value;
-  if (algorithm === "dda") {
-    LineDDA(x0, y0, x1, y1);
-  } else if (algorithm === "bresenham2") {
-    LineBresenham(x0, y0, x1, y1);
-  }
-}
-
-// ============================
-// FUNÇÕES DE DESENHO DE CÍRCULO
-// ============================
-
-// Algoritmo do ponto médio para desenhar circunferência
 function CircleMidpoint(cx, cy, radius) {
   clearLog();
-  let x = 0;
-  let y = radius;
-  let d = 1 - radius;
-  let d_old = null;
-
-  while (x < y + 2) {
-    setPixel(x + cx, y + cy);
-    setPixel(y + cx, x + cy);
-    setPixel(y + cx, -x + cy);
-    setPixel(x + cx, -y + cy);
-    setPixel(-x + cx, -y + cy);
-    setPixel(-y + cx, -x + cy);
-    setPixel(-y + cx, x + cy);
-    setPixel(-x + cx, y + cy);
-
-    if (d_old) {
-      logIteration(x + cx, y + cy, d_old);
-    }
+  let x = 0,
+    y = radius,
+    d = 1 - radius;
+  const plot = (xc, yc, x_offset, y_offset) => {
+    setPixelWorld(xc + x_offset, yc + y_offset);
+    setPixelWorld(xc - x_offset, yc + y_offset);
+    setPixelWorld(xc + x_offset, yc - y_offset);
+    setPixelWorld(xc - x_offset, yc - y_offset);
+    setPixelWorld(xc + y_offset, yc + x_offset);
+    setPixelWorld(xc - y_offset, yc + x_offset);
+    setPixelWorld(xc + y_offset, yc - x_offset);
+    setPixelWorld(xc - y_offset, yc - x_offset);
+  };
+  while (y >= x) {
+    plot(cx, cy, x, y);
+    logIteration(x, y, d);
     if (d < 0) {
-      d_old = d;
       d += 2 * x + 3;
     } else {
-      d_old = d;
       d += 2 * (x - y) + 5;
       y--;
     }
@@ -235,47 +286,141 @@ function CircleMidpoint(cx, cy, radius) {
   }
 }
 
-// Desenho de circunferência pela equação implícita x² + y² = r²
 function CircleEquation(cx, cy, radius) {
+  clearLog();
   for (let x = -radius; x <= radius; x++) {
     const y = Math.sqrt(radius * radius - x * x);
-    setPixel(x + cx, y + cy);
-    setPixel(x + cx, -y + cy);
+    setPixelWorld(x + cx, y + cy);
+    setPixelWorld(x + cx, -y + cy);
   }
 }
 
-// Desenho de circunferência usando funções trigonométricas
 function CircleTrigonometric(cx, cy, radius) {
+  clearLog();
   const steps = 100;
   for (let i = 0; i < steps; i++) {
     const angle = (2 * Math.PI * i) / steps;
     const x = Math.round(radius * Math.cos(angle));
     const y = Math.round(radius * Math.sin(angle));
-    setPixel(x + cx, y + cy);
+    setPixelWorld(x + cx, y + cy);
   }
 }
 
-// ============================
-// FUNÇÕES DE DESENHO DE QUADRADO
-// ============================
+function EllipseMidpoint(cx, cy, rx, ry) {
+  clearLog();
+  let x = 0,
+    y = ry;
+  let d1 = ry * ry - rx * rx * ry + 0.25 * rx * rx;
+  let dx = 2 * ry * ry * x;
+  let dy = 2 * rx * rx * y;
+  const plot = (xc, yc, x, y) => {
+    setPixelWorld(xc + x, yc + y);
+    setPixelWorld(xc - x, yc + y);
+    setPixelWorld(xc + x, yc - y);
+    setPixelWorld(xc - x, yc - y);
+  };
+  while (dx < dy) {
+    plot(cx, cy, x, y);
+    logIteration(x, y, d1);
+    if (d1 < 0) {
+      x++;
+      dx += 2 * ry * ry;
+      d1 += dx + ry * ry;
+    } else {
+      x++;
+      y--;
+      dx += 2 * ry * ry;
+      dy -= 2 * rx * rx;
+      d1 += dx - dy + ry * ry;
+    }
+  }
+  let d2 =
+    ry * ry * ((x + 0.5) * (x + 0.5)) +
+    rx * rx * ((y - 1) * (y - 1)) -
+    rx * rx * ry * ry;
+  while (y >= 0) {
+    plot(cx, cy, x, y);
+    logIteration(x, y, d2);
+    if (d2 > 0) {
+      y--;
+      dy -= 2 * rx * rx;
+      d2 += rx * rx - dy;
+    } else {
+      y--;
+      x++;
+      dx += 2 * ry * ry;
+      dy -= 2 * rx * rx;
+      d2 += dx - dy + rx * rx;
+    }
+  }
+}
 
-// Desenha quadrado baseado em lado ou pontos A, B, C, D
+// ... (Resto do código, como as funções de UI e transformações, permanece inalterado)
+
+const getPoint = (id) => {
+  const val = document.getElementById(id).value.trim();
+  const match = val.match(/\(?\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*\)?/);
+  if (match) {
+    return { x: parseFloat(match[1]), y: parseFloat(match[3]) };
+  }
+  return null;
+};
+
+function changeFigure() {
+  const figure = document.getElementById("figureSelect").value;
+  [
+    "lineParams",
+    "circleParams",
+    "ellipseParams",
+    "cubeParams",
+    "quadParams",
+  ].forEach((id) => {
+    document.getElementById(id).style.display = "none";
+  });
+  document.getElementById(figure + "Params").style.display = "block";
+  document.getElementById("bresenhamParams").style.display = "none";
+}
+
+function drawFigure() {
+  clearCanvasAndDrawBase();
+  const figure = document.getElementById("figureSelect").value;
+  if (figure === "line" || figure === "circle" || figure === "ellipse") {
+    document.getElementById("bresenhamParams").style.display = "block";
+  }
+
+  if (figure === "line") {
+    const alg = document.getElementById("lineAlgorithm").value;
+    const x0 = parseInt(document.getElementById("x1").value),
+      y0 = parseInt(document.getElementById("y1").value);
+    const x1 = parseInt(document.getElementById("x2").value),
+      y1 = parseInt(document.getElementById("y2").value);
+    if (alg === "dda") LineDDA(x0, y0, x1, y1);
+    else LineBresenham(x0, y0, x1, y1);
+  } else if (figure === "circle") {
+    const alg = document.getElementById("circleAlgorithm").value;
+    const cx = parseInt(document.getElementById("cx").value),
+      cy = parseInt(document.getElementById("cy").value);
+    const r = parseInt(document.getElementById("radius").value);
+    if (alg === "midpoint") CircleMidpoint(cx, cy, r);
+    else if (alg === "equation") CircleEquation(cx, cy, r);
+    else if (alg === "trigonometric") CircleTrigonometric(cx, cy, r);
+  } else if (figure === "ellipse") {
+    const cx = parseInt(document.getElementById("el_cx").value),
+      cy = parseInt(document.getElementById("el_cy").value);
+    const rx = parseInt(document.getElementById("el_rx").value),
+      ry = parseInt(document.getElementById("el_ry").value);
+    EllipseMidpoint(cx, cy, rx, ry);
+  } else if (figure === "cube" || figure === "quad") {
+    drawSquare();
+  }
+}
+
 function drawSquare() {
   const figure = document.getElementById("figureSelect").value;
   const lado = parseFloat(document.getElementById("lado").value);
-  document.getElementById("lineAlgorithm").value = "dda";
-
   let points;
-
-  if (lado > 0 && figure === "cube") {
-    const centerX = 0;
-    const centerY = 0;
+  if (figure === "cube") {
     const halfSize = lado / 2;
-
-    // [ x1, y1, 1 ]  // Ponto 1
-    // [ x2, y2, 1 ]  // Ponto 2
-    // [ x3, y3, 1 ]  // Ponto 3
-    // [ x4, y4, 1 ]  // Ponto 4
     points = [
       [-halfSize, -halfSize, 1],
       [halfSize, -halfSize, 1],
@@ -283,16 +428,14 @@ function drawSquare() {
       [-halfSize, halfSize, 1],
     ];
   } else {
-    const A = getPoint("A");
-    const B = getPoint("B");
-    const C = getPoint("C");
-    const D = getPoint("D");
-
+    const A = getPoint("A"),
+      B = getPoint("B"),
+      C = getPoint("C"),
+      D = getPoint("D");
     if (!A || !B || !C || !D) {
-      alert("Por favor, insira todas as coordenadas corretamente.");
+      alert("Coordenadas do quadrilátero inválidas.");
       return;
     }
-
     points = [
       [A.x, A.y, 1],
       [B.x, B.y, 1],
@@ -300,218 +443,106 @@ function drawSquare() {
       [D.x, D.y, 1],
     ];
   }
-
   squarePoints = points;
-  for (let i = 0; i < 4; i++) {
-    const next = (i + 1) % 4;
-    Line(points[i][0], points[i][1], points[next][0], points[next][1]);
-  }
-
+  redrawPolygon();
   document.getElementById("iterationLog").style.display = "none";
 }
 
-// ============================
-// FUNÇÕES DE CONTROLE DE INTERFACE
-// ============================
-
-// Mostra/oculta campos de acordo com a figura escolhida
-function changeFigure() {
-  const figure = document.getElementById("figureSelect").value;
-  document.getElementById("lineParams").style.display =
-    figure === "line" ? "block" : "none";
-  document.getElementById("circleParams").style.display =
-    figure === "circle" ? "block" : "none";
-  document.getElementById("cubeParams").style.display =
-    figure === "cube" ? "block" : "none";
-  document.getElementById("quadParams").style.display =
-    figure === "quad" ? "block" : "none";
-}
-
-// Executa o desenho com base na figura selecionada
-function drawFigure() {
-  clearCanvas();
-  const figure = document.getElementById("figureSelect").value;
-
-  if (figure === "line") {
-    const x0 = parseInt(document.getElementById("x1").value);
-    const y0 = parseInt(document.getElementById("y1").value);
-    const x1 = parseInt(document.getElementById("x2").value);
-    const y1 = parseInt(document.getElementById("y2").value);
-    Line(x0, y0, x1, y1);
-    document.getElementById("bresenhamParams").style.display = "block";
-  } else if (figure === "circle") {
-    const cx = parseInt(document.getElementById("cx").value);
-    const cy = parseInt(document.getElementById("cy").value);
-    const radius = parseInt(document.getElementById("radius").value);
-    const algorithm = document.getElementById("circleAlgorithm").value;
-    document.getElementById("bresenhamParams").style.display = "block";
-
-    if (algorithm === "midpoint") {
-      CircleMidpoint(cx, cy, radius);
-    } else if (algorithm === "equation") {
-      CircleEquation(cx, cy, radius);
-    } else if (algorithm === "trigonometric") {
-      CircleTrigonometric(cx, cy, radius);
-    }
-  } else if (figure === "cube" || figure === "quad") {
-    drawSquare();
+function redrawPolygon() {
+  clearCanvasAndDrawBase();
+  if (!squarePoints || squarePoints.length === 0) return;
+  for (let i = 0; i < squarePoints.length; i++) {
+    const next = (i + 1) % squarePoints.length;
+    LineBresenham(
+      squarePoints[i][0],
+      squarePoints[i][1],
+      squarePoints[next][0],
+      squarePoints[next][1]
+    );
   }
 }
 
-// ============================
-// TRANSFORMAÇÕES
-// ============================
-
-// Função para aplicar a translação nos pontos
 function translateSquare() {
-  console.log("transladando...");
-  const tx = parseInt(document.getElementById("tx").value);
-  const ty = parseInt(document.getElementById("ty").value);
-
+  const tx = parseFloat(document.getElementById("tx").value);
+  const ty = parseFloat(document.getElementById("ty").value);
   if (!squarePoints || squarePoints.length === 0) {
-    alert("Desenhe o quadrado primeiro.");
+    alert("Desenhe a forma primeiro.");
     return;
   }
-
-  // Soma diretamente o vetor de translação (tx, ty)
   squarePoints = squarePoints.map(([x, y, z]) => [x + tx, y + ty, z]);
-
-  // Redesenha a figura transladada
-  clearCanvas();
-  for (let i = 0; i < 4; i++) {
-    const next = (i + 1) % 4;
-    Line(
-      squarePoints[i][0],
-      squarePoints[i][1],
-      squarePoints[next][0],
-      squarePoints[next][1]
-    );
-  }
+  redrawPolygon();
 }
 
-// Função para aplicar a escala nos pontos usando a matriz homogênea
 function scale() {
-  console.log("escalonizando...");
-
-  // Pegando os valores de escala
-  let sx = parseFloat(document.getElementById("sx").value);
-  let sy = parseFloat(document.getElementById("sy").value);
-
-  // Verifica se os valores são válidos (números)
-  if (isNaN(sx) || isNaN(sy)) {
-    alert("Valores de escala inválidos. Tente novamente.");
-    return;
-  }
-
-  // Verifica se os valores são negativos para tratar de forma apropriada
-  if (sx < 0) {
-    sx = 1 / Math.abs(sx); // Se negativo, aplica a inversão para diminuir
-  }
-  if (sy < 0) {
-    sy = 1 / Math.abs(sy); // Se negativo, aplica a inversão para diminuir
-  }
-
+  const sx = parseFloat(document.getElementById("sx").value);
+  const sy = parseFloat(document.getElementById("sy").value);
   if (!squarePoints || squarePoints.length === 0) {
-    alert("Desenhe o quadrado primeiro.");
+    alert("Desenhe a forma primeiro.");
     return;
   }
-
-  // Matriz de escala homogênea 3x3
-  const scaleMatrix = [
-    [sx, 0, 0], // Escala no eixo X
-    [0, sy, 0], // Escala no eixo Y
-    [0, 0, 1], // Coordenada homogênea
-  ];
-
-  // Aplica a escala nos pontos
-  squarePoints = squarePoints.map(([x, y, z]) => {
-    // Coordenadas homogêneas (x, y, 1)
-    const point = [x, y, 1];
-
-    // Multiplicação da matriz de escala pelo ponto
-    const newX =
-      scaleMatrix[0][0] * point[0] +
-      scaleMatrix[0][1] * point[1] +
-      scaleMatrix[0][2] * point[2];
-    const newY =
-      scaleMatrix[1][0] * point[0] +
-      scaleMatrix[1][1] * point[1] +
-      scaleMatrix[1][2] * point[2];
-    const newZ =
-      scaleMatrix[2][0] * point[0] +
-      scaleMatrix[2][1] * point[1] +
-      scaleMatrix[2][2] * point[2];
-
-    return [newX, newY, newZ];
-  });
-
-  // Redesenha a figura escalonada
-  clearCanvas();
-  for (let i = 0; i < 4; i++) {
-    const next = (i + 1) % 4;
-    Line(
-      squarePoints[i][0],
-      squarePoints[i][1],
-      squarePoints[next][0],
-      squarePoints[next][1]
-    );
-  }
+  squarePoints = squarePoints.map(([x, y, z]) => [x * sx, y * sy, z]);
+  redrawPolygon();
 }
 
-// Função para aplicar a rotação nos pontos
 function rotateSquare() {
-  console.log("rotacionando...");
   const angleDegrees = parseFloat(document.getElementById("ang").value);
-
   if (!squarePoints || squarePoints.length === 0) {
-    alert("Desenhe o quadrado primeiro.");
+    alert("Desenhe a forma primeiro.");
     return;
   }
-
-  const angleRad = (-angleDegrees * Math.PI) / 180;
-
-  // O ponto de rotação será o primeiro ponto (A) do quadrado
-  const pivotX = squarePoints[0][0];
-  const pivotY = squarePoints[0][1];
-
+  const angleRad = (angleDegrees * Math.PI) / 180;
   const cos = Math.cos(angleRad);
   const sin = Math.sin(angleRad);
-
-  // Aplicar rotação em torno do ponto A
-  squarePoints = squarePoints.map((p, index) => {
-    // Não rotacionamos o próprio ponto A (pivô)
-    if (index === 0) return p;
-
-    const dx = p[0] - pivotX;
-    const dy = p[1] - pivotY;
-    const xRot = dx * cos - dy * sin + pivotX;
-    const yRot = dx * sin + dy * cos + pivotY;
-    return [xRot, yRot, 1];
+  squarePoints = squarePoints.map(([x, y, z]) => {
+    const xRot = x * cos - y * sin;
+    const yRot = x * sin + y * cos;
+    return [xRot, yRot, z];
   });
-
-  // Redesenhar
-  clearCanvas();
-  for (let i = 0; i < 4; i++) {
-    const next = (i + 1) % 4;
-    Line(
-      squarePoints[i][0],
-      squarePoints[i][1],
-      squarePoints[next][0],
-      squarePoints[next][1]
-    );
-  }
+  redrawPolygon();
 }
+
+function reflectSquare(eixo) {
+  if (!squarePoints || squarePoints.length === 0) {
+    alert("Desenhe a forma primeiro.");
+    return;
+  }
+  if (eixo === "x") {
+    squarePoints = squarePoints.map(([x, y, z]) => [x, -y, z]);
+  } else {
+    squarePoints = squarePoints.map(([x, y, z]) => [-x, y, z]);
+  }
+  redrawPolygon();
+}
+
+function applyShear() {
+  if (!squarePoints || squarePoints.length === 0) {
+    alert("Desenhe a forma primeiro.");
+    return;
+  }
+  const shx = document.getElementById("shx").disabled
+    ? 0
+    : parseFloat(document.getElementById("shx").value);
+  const shy = document.getElementById("shy").disabled
+    ? 0
+    : parseFloat(document.getElementById("shy").value);
+  squarePoints = squarePoints.map(([x, y, z]) => {
+    const newX = x + shx * y;
+    const newY = y + shy * x;
+    return [newX, newY, z];
+  });
+  redrawPolygon();
+}
+
 let animando = false;
 let intervaloRotacao;
-
 function animacaoRotacao(btn) {
   if (!animando) {
     animando = true;
     btn.textContent = "Parar rotação";
     intervaloRotacao = setInterval(() => {
-      document.getElementById("ang").value = "1";
+      document.getElementById("ang").value = "2";
       rotateSquare();
-    }, 10);
+    }, 20);
   } else {
     animando = false;
     clearInterval(intervaloRotacao);
@@ -519,158 +550,66 @@ function animacaoRotacao(btn) {
   }
 }
 
-// Função para aplicar a reflexão nos pontos
-function reflectSquare(eixo) {
-  console.log("refletindo...");
-
-  if (!squarePoints || squarePoints.length === 0) {
-    alert("Desenhe o quadrado primeiro.");
-    return;
-  }
-
-  // Verifica se a reflexão é em X ou Y
-  let reflexaoMatrix;
-  if (eixo === "x") {
-    // Matriz de reflexão em X
-    reflexaoMatrix = [
-      [1, 0, 0], // Escala no eixo X
-      [0, -1, 0], // Escala no eixo Y
-      [0, 0, 1], // Coordenada homogênea
-    ];
-  } else if (eixo === "y") {
-    // Matriz de reflexão em Y
-    reflexaoMatrix = [
-      [-1, 0, 0], // Escala no eixo X
-      [0, 1, 0], // Escala no eixo Y
-      [0, 0, 1], // Coordenada homogênea
-    ];
-  }
-
-  // Aplica a reflexão nos pontos
-  squarePoints = squarePoints.map(([x, y, z]) => {
-    const point = [x, y, 1]; // Coordenadas homogêneas (x, y, 1)
-
-    // Multiplicação da matriz de reflexão pelo ponto
-    const newX =
-      reflexaoMatrix[0][0] * point[0] +
-      reflexaoMatrix[0][1] * point[1] +
-      reflexaoMatrix[0][2] * point[2];
-    const newY =
-      reflexaoMatrix[1][0] * point[0] +
-      reflexaoMatrix[1][1] * point[1] +
-      reflexaoMatrix[1][2] * point[2];
-    const newZ =
-      reflexaoMatrix[2][0] * point[0] +
-      reflexaoMatrix[2][1] * point[1] +
-      reflexaoMatrix[2][2] * point[2];
-
-    return [newX, newY, newZ];
-  });
-
-  // Redesenha a figura refletida
-  clearCanvas();
-  for (let i = 0; i < 4; i++) {
-    const next = (i + 1) % 4;
-    Line(
-      squarePoints[i][0],
-      squarePoints[i][1],
-      squarePoints[next][0],
-      squarePoints[next][1]
-    );
-  }
-}
-
-// Função para aplicar o cisalhamento
-function applyShear() {
-  const eixo = document.getElementById("cisalhamentoEixo").value;
-  const shx = parseFloat(document.getElementById("shx").value);
-  const shy = parseFloat(document.getElementById("shy").value);
-
-  // Define valores padrão como 0 se o campo estiver desabilitado
-  const a = document.getElementById("shx").disabled ? 0 : shx;
-  const b = document.getElementById("shy").disabled ? 0 : shy;
-
-  // Matriz geral de cisalhamento
-  const shearMatrix = [
-    [1, a, 0],
-    [b, 1, 0],
-    [0, 0, 1],
-  ];
-
-  squarePoints = squarePoints.map(([x, y, z]) => {
-    const point = [x, y, 1]; // Coordenadas homogêneas
-    const newX = shearMatrix[0][0] * point[0] + shearMatrix[0][1] * point[1];
-    const newY = shearMatrix[1][0] * point[0] + shearMatrix[1][1] * point[1];
-    return [newX, newY, 1];
-  });
-
-  clearCanvas();
-  for (let i = 0; i < 4; i++) {
-    const next = (i + 1) % 4;
-    Line(
-      squarePoints[i][0],
-      squarePoints[i][1],
-      squarePoints[next][0],
-      squarePoints[next][1]
-    );
-  }
-}
-
-// ============================
-// FUNÇÃO PARA ATUALIZAR COORDENADAS DO MOUSE
-// ============================
-
 function setupMouseCoordsTracker() {
   const mouseCoordsElement = document.getElementById("mouseCoords");
-
   canvas.addEventListener("mousemove", (event) => {
-    // Obtém a posição do mouse em relação ao canvas
     const rect = canvas.getBoundingClientRect();
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
-
-    // Converte para coordenadas do plano cartesiano (considerando o centro como (0,0))
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const coordX = mouseX - centerX;
-    const coordY = centerY - mouseY; // Invertemos Y porque no canvas Y cresce para baixo
-
-    // Atualiza o elemento HTML com as coordenadas
-    mouseCoordsElement.textContent = `Coordenadas: (${coordX.toFixed(
-      0
-    )}, ${coordY.toFixed(0)})`;
+    const worldCoords = deviceToWorld(mouseX, mouseY);
+    mouseCoordsElement.textContent = `Coordenadas do Mundo: (${worldCoords.x.toFixed(
+      2
+    )}, ${worldCoords.y.toFixed(2)})`;
   });
 }
 
-// ============================
-// FUNÇÃO PARA MANIPULAR O SELECT DE CISALHAMENTO (FRONT-END)
-// ============================
+function changeTransformer() {
+  const t = document.getElementById("transformeSelect").value;
+  ["translacao", "escala", "rotacao", "reflexao", "cisalhamento"].forEach(
+    (id) => {
+      document.getElementById(id).style.display = "none";
+    }
+  );
+  document.getElementById(t).style.display = "block";
+}
+
 function updateCisalhamentoEixo() {
   const eixo = document.getElementById("cisalhamentoEixo").value;
-
-  // Se for cisalhamento em X, desabilita o campo shy
-  if (eixo === "cisX") {
-    document.getElementById("shx").disabled = false;
-    document.getElementById("shy").disabled = true;
-  }
-  // Se for cisalhamento em Y, desabilita o campo shx
-  else if (eixo === "cisY") {
-    document.getElementById("shx").disabled = true;
-    document.getElementById("shy").disabled = false;
-  }
-  // Se for cisalhamento em X e Y, habilita ambos os campos
-  else if (eixo === "cisXY") {
+  document.getElementById("shx").disabled = eixo === "cisY";
+  document.getElementById("shy").disabled = eixo === "cisX";
+  if (eixo === "cisXY") {
     document.getElementById("shx").disabled = false;
     document.getElementById("shy").disabled = false;
   }
 }
 
-// Função chamada ao carregar a página para definir o comportamento inicial do select de cisalhamento
-// OBS: Não aplica transformação, é meramente de uso para o dinamismo do front-end
+function logIteration(x, y, d = null, k = null) {
+  const logContainer = document.getElementById("iterationLog");
+  if (!logContainer.querySelector("table")) {
+    logContainer.innerHTML = "";
+    const table = document.createElement("table");
+    table.className = "table table-bordered table-sm";
+    table.innerHTML = `<thead><tr><th>${
+      d !== null ? "d" : "k"
+    }</th><th>X</th><th>Y</th></tr></thead><tbody></tbody>`;
+    logContainer.appendChild(table);
+  }
+  const tbody = logContainer.querySelector("tbody");
+  const row = document.createElement("tr");
+  row.innerHTML = `<td>${
+    d !== null && typeof d === "number" ? Math.round(d) : d
+  }</td><td>${Math.round(x)}</td><td>${Math.round(y)}</td>`;
+  tbody.appendChild(row);
+}
+
+function clearLog() {
+  document.getElementById("iterationLog").innerHTML = "";
+}
+
 window.onload = function () {
-  updateCisalhamentoEixo(); // Chama a função para aplicar a configuração padrão
+  changeFigure();
+  changeTransformer();
+  updateAndRedraw();
+  setupMouseCoordsTracker();
+  updateCisalhamentoEixo();
 };
-
-setupMouseCoordsTracker();
-
-updateCanva();

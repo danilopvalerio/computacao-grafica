@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
-    <title>Plano Cartesiano</title>
+    <title>Laboratório de Computação Gráfica</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -15,232 +15,503 @@
   <body>
     <div class="layout-container">
       <div class="sidebar gradient-custom-strong p-2 pt-4 m-3">
-        <div class="container-fluid">
-          <!-- Configurações da janela -->
-          <div class="mb-3">
-            <h2 class="fs-5 text-center">Configurações</h2>
-            <label class="form-label w-100 text-center">Janela</label>
-            <div class="row g-2 justify-content-center">
-              <div class="col-6 col-md-6">
-                <input
-                  class="w-100"
-                  type="number"
-                  id="width"
-                  value="500"
-                  min="100"
-                  max="1000"
-                  placeholder="W"
-                />
-              </div>
-              <div class="col-6 col-md-6">
-                <input
-                  class="w-100"
-                  type="number"
-                  id="height"
-                  value="500"
-                  min="100"
-                  max="620"
-                  placeholder="H"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div class="mb-3 d-grid gap-2">
-            <button class="" onclick="updateCanva()">Atualizar janela</button>
-            <button class="" onclick="clearCanvas()">Limpar</button>
-          </div>
-
-          <div class="mb-3">
-            <h2 class="fs-5 text-center">Figuras</h2>
-            <select
-              class="form-select-box"
-              id="figureSelect"
-              onchange="changeFigure()"
-            >
-              <option value="line">Reta</option>
-              <option value="circle">Círculo</option>
-              <option value="cube">Quadrado</option>
-              <option value="quad">Quadrilátero</option>
-            </select>
-          </div>
-
-          <div id="lineParams">
-            <div class="row g-2">
-              <div class="col-6">
-                <div class="d-flex align-items-center">
-                  <label for="x1" class="me-2 w-25">X1:</label>
-                  <input
-                    class="w-75"
-                    type="number"
-                    id="x1"
-                    value="10"
-                    placeholder="X1"
-                  />
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="d-flex align-items-center">
-                  <label for="y1" class="me-2 w-25">Y1:</label>
-                  <input
-                    class="w-75"
-                    type="number"
-                    id="y1"
-                    value="10"
-                    placeholder="Y1"
-                  />
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="d-flex align-items-center">
-                  <label for="x2" class="me-2 w-25">X2:</label>
-                  <input
-                    class="w-75"
-                    type="number"
-                    id="x2"
-                    value="50"
-                    placeholder="X2"
-                  />
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="d-flex align-items-center">
-                  <label for="y2" class="me-2 w-25">Y2:</label>
-                  <input
-                    class="w-75"
-                    type="number"
-                    id="y2"
-                    value="90"
-                    placeholder="Y2"
-                  />
-                </div>
-              </div>
-              <div class="col-12">
-                <label for="lineAlgorithm" class="form-label">Algoritmo:</label>
-                <select class="form-select" id="lineAlgorithm">
-                  <option value="dda">DDA</option>
-                  <option value="bresenham2">Bresenham 1º e 2º oitante</option>
-                </select>
-              </div>
-            </div>
-
+        <ul
+          class="nav nav-tabs w-100 justify-content-evenly"
+          id="myTab"
+          role="tablist"
+        >
+          <li class="nav-item" role="presentation">
             <button
-              class="btn btn-primary w-100 mb-1 mt-2"
-              onclick="drawFigure()"
+              class="nav-link active p-2"
+              id="figures-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#figures-tab-pane"
+              type="button"
+              role="tab"
+              aria-controls="figures-tab-pane"
+              aria-selected="true"
             >
-              Desenhar Reta
+              Figuras
             </button>
-          </div>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link p-2"
+              id="heartbeat-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#heartbeat-tab-pane"
+              type="button"
+              role="tab"
+              aria-controls="heartbeat-tab-pane"
+              aria-selected="false"
+            >
+              Batimentos
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link p-2"
+              id="clipping-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#clipping-tab-pane"
+              type="button"
+              role="tab"
+              aria-controls="clipping-tab-pane"
+              aria-selected="false"
+            >
+              Recorte
+            </button>
+          </li>
+        </ul>
 
-          <div id="circleParams" style="display: none">
-            <div class="row g-2 mb-2">
-              <div class="col-6">
-                <label class="form-label">Centro X:</label
-                ><input
-                  class="form-control"
-                  type="number"
-                  id="cx"
-                  value="0"
-                  placeholder="CX"
-                />
+        <div class="tab-content" id="myTabContent">
+          <div
+            class="tab-pane fade show active"
+            id="figures-tab-pane"
+            role="tabpanel"
+            aria-labelledby="figures-tab"
+            tabindex="0"
+          >
+            <div class="container-fluid pt-3">
+              <div class="mb-3">
+                <h2 class="fs-5 text-center">Configurações de Exibição</h2>
+                <label class="form-label w-100 text-center small"
+                  >Canvas (pixels)</label
+                >
+                <div class="row g-2 justify-content-center">
+                  <div class="col-6 col-md-6">
+                    <input
+                      class="form-control form-control-sm"
+                      type="number"
+                      id="width"
+                      value="500"
+                    />
+                  </div>
+                  <div class="col-6 col-md-6">
+                    <input
+                      class="form-control form-control-sm"
+                      type="number"
+                      id="height"
+                      value="500"
+                    />
+                  </div>
+                </div>
+                <hr />
+                <label class="form-label w-100 text-center small"
+                  >Janela do Mundo (World)</label
+                >
+                <div class="row g-2 mb-2">
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      placeholder="Xmin"
+                      id="xw_min"
+                      value="-250"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      placeholder="Xmax"
+                      id="xw_max"
+                      value="250"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      placeholder="Ymin"
+                      id="yw_min"
+                      value="-250"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      placeholder="Ymax"
+                      id="yw_max"
+                      value="250"
+                    />
+                  </div>
+                </div>
+                <div class="form-check form-switch mb-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id="viewport_toggle"
+                    checked
+                  />
+                  <label class="form-check-label small" for="viewport_toggle"
+                    >Ativar Viewport</label
+                  >
+                </div>
+                <label class="form-label w-100 text-center small"
+                  >Viewport (pixels)</label
+                >
+                <div class="row g-2">
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      placeholder="XVmin"
+                      id="xv_min"
+                      value="50"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      placeholder="XVmax"
+                      id="xv_max"
+                      value="450"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      placeholder="YVmin"
+                      id="yv_min"
+                      value="50"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      placeholder="YVmax"
+                      id="yv_max"
+                      value="450"
+                    />
+                  </div>
+                </div>
               </div>
-              <div class="col-6">
-                <label class="form-label">Centro Y:</label
-                ><input
-                  class="form-control"
-                  type="number"
-                  id="cy"
-                  value="0"
-                  placeholder="CY"
-                />
+              <div class="mb-3 d-grid gap-2">
+                <button
+                  class="btn btn-secondary btn-sm"
+                  onclick="updateAndRedraw()"
+                >
+                  Atualizar Exibição
+                </button>
               </div>
-              <div class="col-12">
-                <label class="form-label">Raio:</label
-                ><input
-                  class="form-control"
-                  type="number"
-                  id="radius"
-                  value="50"
-                  placeholder="Raio"
-                />
-              </div>
-              <div class="col-12">
-                <label class="form-label">Algoritmo:</label>
-                <select class="form-select" id="circleAlgorithm">
-                  <option value="midpoint">Ponto Médio</option>
-                  <option value="equation">Equação da Circunferência</option>
-                  <option value="trigonometric">Trigonométrico</option>
+              <hr />
+
+              <div class="mb-3">
+                <h2 class="fs-5 text-center">Figuras</h2>
+                <select
+                  class="form-select"
+                  id="figureSelect"
+                  onchange="changeFigure()"
+                >
+                  <option value="line">Reta</option>
+                  <option value="circle">Círculo</option>
+                  <option value="ellipse">Elipse</option>
+                  <option value="cube">Quadrado</option>
+                  <option value="quad">Quadrilátero</option>
                 </select>
               </div>
+
+              <div id="lineParams">
+                <div class="row g-2">
+                  <div class="col-6">
+                    <div class="d-flex align-items-center">
+                      <label for="x1" class="me-2">X1:</label
+                      ><input
+                        class="form-control"
+                        type="number"
+                        id="x1"
+                        value="-200"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="d-flex align-items-center">
+                      <label for="y1" class="me-2">Y1:</label
+                      ><input
+                        class="form-control"
+                        type="number"
+                        id="y1"
+                        value="-200"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="d-flex align-items-center">
+                      <label for="x2" class="me-2">X2:</label
+                      ><input
+                        class="form-control"
+                        type="number"
+                        id="x2"
+                        value="200"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="d-flex align-items-center">
+                      <label for="y2" class="me-2">Y2:</label
+                      ><input
+                        class="form-control"
+                        type="number"
+                        id="y2"
+                        value="200"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <label for="lineAlgorithm" class="form-label mt-2"
+                      >Algoritmo:</label
+                    ><select class="form-select" id="lineAlgorithm">
+                      <option value="dda">DDA</option>
+                      <option value="bresenham">Ponto Médio</option>
+                    </select>
+                  </div>
+                </div>
+                <button
+                  class="btn btn-primary w-100 mb-1 mt-3"
+                  onclick="drawFigure()"
+                >
+                  Desenhar Figura
+                </button>
+              </div>
+
+              <div id="circleParams" style="display: none">
+                <div class="row g-2">
+                  <div class="col-6">
+                    <label>Centro X:</label
+                    ><input
+                      class="form-control"
+                      type="number"
+                      id="cx"
+                      value="0"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <label>Centro Y:</label
+                    ><input
+                      class="form-control"
+                      type="number"
+                      id="cy"
+                      value="0"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <label>Raio:</label
+                    ><input
+                      class="form-control"
+                      type="number"
+                      id="radius"
+                      value="150"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label mt-2">Algoritmo:</label
+                    ><select class="form-select" id="circleAlgorithm">
+                      <option value="midpoint">Ponto Médio</option>
+                      <option value="equation">Equação</option>
+                      <option value="trigonometric">Trigonométrico</option>
+                    </select>
+                  </div>
+                </div>
+                <button
+                  class="btn btn-primary w-100 mb-1 mt-3"
+                  onclick="drawFigure()"
+                >
+                  Desenhar Figura
+                </button>
+              </div>
+
+              <div id="ellipseParams" style="display: none">
+                <div class="row g-2">
+                  <div class="col-6">
+                    <label>Centro X:</label
+                    ><input
+                      class="form-control"
+                      type="number"
+                      id="el_cx"
+                      value="0"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <label>Centro Y:</label
+                    ><input
+                      class="form-control"
+                      type="number"
+                      id="el_cy"
+                      value="0"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <label>Raio Rx:</label
+                    ><input
+                      class="form-control"
+                      type="number"
+                      id="el_rx"
+                      value="200"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <label>Raio Ry:</label
+                    ><input
+                      class="form-control"
+                      type="number"
+                      id="el_ry"
+                      value="100"
+                    />
+                  </div>
+                </div>
+                <button
+                  class="btn btn-primary w-100 mb-1 mt-3"
+                  onclick="drawFigure()"
+                >
+                  Desenhar Figura
+                </button>
+              </div>
+
+              <div id="cubeParams" style="display: none">
+                <div class="row g-2">
+                  <div class="col-12">
+                    <label>Lado:</label
+                    ><input class="form-control" id="lado" value="200" />
+                  </div>
+                </div>
+                <button
+                  class="btn btn-primary w-100 mb-1 mt-3"
+                  onclick="drawFigure()"
+                >
+                  Desenhar Figura
+                </button>
+              </div>
+
+              <div id="quadParams" style="display: none">
+                <div class="row g-2 mb-2">
+                  <div class="col-6">
+                    <label class="form-label">A (x,y):</label
+                    ><input class="form-control" id="A" value="(-100,-100)" />
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label">B (x,y):</label
+                    ><input class="form-control" id="B" value="(100,-100)" />
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label">C (x,y):</label
+                    ><input class="form-control" id="C" value="(150,100)" />
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label">D (x,y):</label
+                    ><input class="form-control" id="D" value="(-150,100)" />
+                  </div>
+                </div>
+                <button
+                  class="btn btn-primary w-100 mb-3"
+                  onclick="drawFigure()"
+                >
+                  Desenhar Figura
+                </button>
+              </div>
+
+              <div id="bresenhamParams" style="display: none">
+                <h2 class="fs-6 mt-3 text-center">Iterações</h2>
+                <div
+                  id="iterationLog"
+                  class="bg-light text-dark p-2 border rounded-3"
+                  style="max-height: 200px; overflow-y: auto"
+                ></div>
+              </div>
             </div>
-            <button class="btn btn-primary w-100 mb-3" onclick="drawFigure()">
-              Desenhar Círculo
-            </button>
           </div>
 
-          <div id="cubeParams" style="display: none">
-            <div class="row g-2 mb-2">
-              <div class="col-12">
-                <label class="form-label">Lado:</label>
-                <input
-                  class="form-control"
-                  id="lado"
-                  value="50"
-                  placeholder="Lado"
-                />
-              </div>
+          <div
+            class="tab-pane fade"
+            id="heartbeat-tab-pane"
+            role="tabpanel"
+            aria-labelledby="heartbeat-tab"
+            tabindex="0"
+          >
+            <div class="text-center p-4">
+              <h4 class="mt-3">Simulador de Batimentos Cardíacos</h4>
+              <p class="text-muted mt-3">Exercício 2.5</p>
+              <p>Funcionalidade a ser implementada.</p>
+              <button class="btn btn-success mt-4" disabled>
+                Iniciar Animação
+              </button>
             </div>
-            <button class="btn btn-primary w-100 mb-3" onclick="drawFigure()">
-              Desenhar Quadrado
-            </button>
           </div>
 
-          <!-- Quadrilátero -->
-          <div id="quadParams" style="display: none">
-            <div class="row g-2 mb-2">
-              <div class="col-6">
-                <label class="form-label">A (x,y):</label>
-                <input class="form-control" id="A" value="(0,0)" />
+          <div
+            class="tab-pane fade"
+            id="clipping-tab-pane"
+            role="tabpanel"
+            aria-labelledby="clipping-tab"
+            tabindex="0"
+          >
+            <div class="text-center p-4">
+              <h4 class="mt-3">Recorte de Cohen-Sutherland</h4>
+              <p class="text-muted mt-3">
+                Define a janela e aplica o corte final às figuras desenhadas na
+                aba "Figuras".
+              </p>
+              <div class="mt-4">
+                <h5 class="fs-6">Janela de Recorte (Mundo)</h5>
+                <div class="row g-2 justify-content-center">
+                  <div class="col-6">
+                    <input
+                      class="form-control"
+                      type="number"
+                      id="clipXmin"
+                      placeholder="Xmin"
+                      value="-100"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control"
+                      type="number"
+                      id="clipXmax"
+                      placeholder="Xmax"
+                      value="100"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control"
+                      type="number"
+                      id="clipYmin"
+                      placeholder="Ymin"
+                      value="-100"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control"
+                      type="number"
+                      id="clipYmax"
+                      placeholder="Ymax"
+                      value="100"
+                    />
+                  </div>
+                </div>
               </div>
-              <div class="col-6">
-                <label class="form-label">B (x,y):</label>
-                <input class="form-control" id="B" value="(50,0)" />
-              </div>
-              <div class="col-6">
-                <label class="form-label">C (x,y):</label>
-                <input class="form-control" id="C" value="(50,50)" />
-              </div>
-              <div class="col-6">
-                <label class="form-label">D (x,y):</label>
-                <input class="form-control" id="D" value="(0,50)" />
-              </div>
+              <button class="btn btn-primary mt-4" onclick="applyClipping()">
+                Aplicar Recorte Final
+              </button>
             </div>
-            <button class="btn btn-primary w-100 mb-3" onclick="drawFigure()">
-              Desenhar Quadrilátero
-            </button>
-          </div>
-
-          <div id="bresenhamParams" style="display: none">
-            <h2 class="fs-5 mt-3 text-center">Iterações</h2>
-            <div
-              id="iterationLog"
-              class="bg-light text-dark p-2 border rounded-3"
-              style="max-height: 400px; overflow-y: auto"
-            ></div>
           </div>
         </div>
       </div>
 
       <div class="main-content">
         <canvas id="canvas" height="500" width="500"></canvas>
-        <p class="coords" id="mouseCoords">Coordenadas: (0, 0)</p>
+        <p class="coords text-center text-muted" id="mouseCoords">
+          Coordenadas do Mundo: (0, 0)
+        </p>
       </div>
 
       <div
         class="sidebar gradient-custom-strong p-3 pt-4 m-3 transformer-header"
       >
-        <h2 class="fs-5">Transformações</h2>
-
+        <h2 class="fs-5">
+          Transformações 2D <br /><span class="fs-6 text-muted"
+            >(Polígono Ativo)</span
+          >
+        </h2>
         <select
           class="mt-3 form-select"
           id="transformeSelect"
@@ -252,91 +523,38 @@
           <option value="reflexao">Reflexão</option>
           <option value="cisalhamento">Cisalhamento</option>
         </select>
-
         <div id="translacao">
-          <label class="mt-3">tx:</label>
-          <input
-            class="w-75"
-            type="number"
-            id="tx"
-            value="0"
-            placeholder="CX"
-          />
-          <br />
-          <label class="mt-3">ty:</label>
-          <input
-            class="w-75"
-            type="number"
-            id="ty"
-            value="0"
-            placeholder="CY"
-          />
-          <button class="mt-3" onclick="translateSquare()">
-            Aplicar Transformação
-          </button>
+          <label class="mt-3">tx:</label
+          ><input class="w-75" type="number" id="tx" value="10" /> <br />
+          <label class="mt-3">ty:</label
+          ><input class="w-75" type="number" id="ty" value="10" />
+          <button class="mt-3" onclick="translateSquare()">Aplicar</button>
         </div>
-
         <div id="escala" style="display: none">
-          <label class="mt-3">sx:</label>
-          <input
-            class="w-75"
-            type="number"
-            id="sx"
-            value="0"
-            placeholder="CX"
-          />
-          <br />
-          <label class="mt-3">sy:</label>
-          <input
-            class="w-75"
-            type="number"
-            id="sy"
-            value="0"
-            placeholder="CY"
-          />
-          <button onclick="scale()">Aplicar Transformação</button>
+          <label class="mt-3">sx:</label
+          ><input class="w-75" id="sx" value="1.2" /> <br />
+          <label class="mt-3">sy:</label
+          ><input class="w-75" id="sy" value="1.2" />
+          <button onclick="scale()">Aplicar</button>
         </div>
-
         <div id="rotacao" style="display: none">
           <div class="d-flex justify-content-evenly align-items-center mt-3">
-            <label>θ:</label>
-            <input
-              class="w-75"
-              type="number"
-              id="ang"
-              value="0"
-              placeholder="CX"
-            />
+            <label>θ:</label
+            ><input class="w-75" type="number" id="ang" value="15" />
           </div>
-          <button onclick="rotateSquare()">Aplicar Transformação</button>
+          <button onclick="rotateSquare()">Aplicar</button>
           <button onclick="animacaoRotacao(this)">Animação</button>
         </div>
-
         <div id="reflexao" style="display: none">
           <label>Em:</label>
           <button onclick="reflectSquare('x')">Reflexão em X</button>
           <button onclick="reflectSquare('y')">Reflexão em Y</button>
         </div>
-
         <div id="cisalhamento" style="display: none">
-          <label class="mt-3">shx (a):</label>
-          <input
-            class="w-50"
-            type="number"
-            id="shx"
-            value="0"
-            placeholder="CX"
-          />
-
-          <label class="mt-3">shy (b):</label>
-          <input
-            class="w-50"
-            type="number"
-            id="shy"
-            value="0"
-            placeholder="CY"
-          />
-
+          <label class="mt-3">shx (a):</label
+          ><input class="w-50" type="number" id="shx" value="0.2" />
+          <label class="mt-3">shy (b):</label
+          ><input class="w-50" type="number" id="shy" value="0" disabled />
           <select
             class="form-select mt-3"
             id="cisalhamentoEixo"
@@ -346,29 +564,16 @@
             <option value="cisY">Em Y</option>
             <option value="cisXY">Em X e Y</option>
           </select>
-
-          <button onclick="applyShear()">Aplicar Transformação</button>
+          <button onclick="applyShear()">Aplicar</button>
         </div>
-
-        <h2 class="fs-6 mt-3">Historico</h2>
-        <div id="historico"></div>
       </div>
-      <button
-        id="btn-3d"
-        onclick="window.location.href = 'transform3d.html'"
-        title="Abrir Transformações 3D"
-      >
-        3D
-      </button>
     </div>
 
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+      crossorigin="anonymous"
+    ></script>
     <script src="script.js"></script>
-    <script src="transformer.js"></script>
   </body>
-
-  <script>
-    function abrirJanela3D() {
-      window.open("transform3d.html", "_blank", "width=600,height=600");
-    }
-  </script>
 </html>
