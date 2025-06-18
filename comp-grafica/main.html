@@ -140,7 +140,6 @@
                     type="checkbox"
                     role="switch"
                     id="viewport_toggle"
-                    checked
                   />
                   <label class="form-check-label small" for="viewport_toggle"
                     >Ativar Viewport</label
@@ -190,6 +189,9 @@
                   onclick="updateAndRedraw()"
                 >
                   Atualizar Exibição
+                </button>
+                <button class="btn btn-secondary" onclick="clearClippingView()">
+                  Limpar
                 </button>
               </div>
               <hr />
@@ -442,56 +444,119 @@
             aria-labelledby="clipping-tab"
             tabindex="0"
           >
-            <div class="text-center p-4">
-              <h4 class="mt-3">Recorte de Cohen-Sutherland</h4>
-              <p class="text-muted mt-3">
-                Define a janela e aplica o corte final às figuras desenhadas na
-                aba "Figuras".
-              </p>
+            <div class="p-3">
+              <h4 class="mt-3 text-center">Recorte de Linha (por Pixel)</h4>
+
               <div class="mt-4">
-                <h5 class="fs-6">Janela de Recorte (Mundo)</h5>
-                <div class="row g-2 justify-content-center">
+                <h5 class="fs-6 mb-2">Configurações da reta:</h5>
+                <div class="row g-2 mb-2">
                   <div class="col-6">
                     <input
-                      class="form-control"
+                      class="form-control form-control-sm"
                       type="number"
-                      id="clipXmin"
-                      placeholder="Xmin"
-                      value="-100"
+                      id="csLineX1"
+                      value="-200"
+                      placeholder="X1"
                     />
                   </div>
                   <div class="col-6">
                     <input
-                      class="form-control"
+                      class="form-control form-control-sm"
                       type="number"
-                      id="clipXmax"
-                      placeholder="Xmax"
-                      value="100"
+                      id="csLineY1"
+                      value="-200"
+                      placeholder="Y1"
                     />
                   </div>
                   <div class="col-6">
                     <input
-                      class="form-control"
+                      class="form-control form-control-sm"
                       type="number"
-                      id="clipYmin"
-                      placeholder="Ymin"
-                      value="-100"
+                      id="csLineX2"
+                      value="200"
+                      placeholder="X2"
                     />
                   </div>
                   <div class="col-6">
                     <input
-                      class="form-control"
+                      class="form-control form-control-sm"
                       type="number"
-                      id="clipYmax"
-                      placeholder="Ymax"
-                      value="100"
+                      id="csLineY2"
+                      value="200"
+                      placeholder="Y2"
                     />
                   </div>
                 </div>
+                <div class="d-grid">
+                  <button
+                    class="btn btn-outline-primary btn-sm"
+                    onclick="drawLineForClipping()"
+                  >
+                    Desenhar Reta (Pré-visualização)
+                  </button>
+                </div>
               </div>
-              <button class="btn btn-primary mt-4" onclick="applyClipping()">
-                Aplicar Recorte Final
-              </button>
+
+              <div class="mt-4">
+                <h5 class="fs-6 mb-2">
+                  Configurações da janela de recorte (retângulo):
+                </h5>
+                <div class="row g-2 mb-2">
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      type="number"
+                      id="clipWinXmin"
+                      value="0"
+                      placeholder="Xmin"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      type="number"
+                      id="clipWinYmin"
+                      value="0"
+                      placeholder="Ymin"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      type="number"
+                      id="clipWinXmax"
+                      value="100"
+                      placeholder="Xmax"
+                    />
+                  </div>
+                  <div class="col-6">
+                    <input
+                      class="form-control form-control-sm"
+                      type="number"
+                      id="clipWinYmax"
+                      value="100"
+                      placeholder="Ymax"
+                    />
+                  </div>
+                </div>
+                <div class="d-grid">
+                  <button
+                    class="btn btn-outline-primary btn-sm"
+                    onclick="drawWindowForClipping()"
+                  >
+                    Desenhar Janela (Pré-visualização)
+                  </button>
+                </div>
+              </div>
+
+              <div class="d-grid gap-2 mt-4">
+                <button class="btn btn-primary" onclick="applyClipping()">
+                  Aplicar recorte
+                </button>
+                <button class="btn btn-secondary" onclick="clearClippingView()">
+                  Limpar
+                </button>
+              </div>
             </div>
           </div>
         </div>

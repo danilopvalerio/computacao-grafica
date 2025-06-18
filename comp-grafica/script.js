@@ -1,8 +1,7 @@
 /**
  * @file script.js
- * @description Implementação de algoritmos de Computação Gráfica para rasterização,
- * transformações 2D e gerenciamento de pipeline de visualização (Mundo -> Viewport).
- * @author UEPB - DC - CG (com anotações e explicações)
+ * @description Implementação de algoritmos de Computação Gráfica
+ * @author UEPB - Danilo Pedro da Silva Valério, Laura Barbosa Vasconcelos
  */
 
 // =========================================================================
@@ -20,6 +19,17 @@ let viewport = {};
 
 // Array para armazenar os vértices de um polígono (em coordenadas do mundo)
 let squarePoints = [];
+
+// =========================================================================
+// == CÓDIGO PARA RECORTE (variáveis globais)
+// =========================================================================
+// Flag para indicar se o modo de recorte por pixel está ativo
+let isClippingActive = false;
+// Objeto para guardar os dados da reta e da janela de recorte
+let clipObjects = {
+  line: null,
+  window: null,
+};
 
 // =========================================================================
 // == PIPELINE DE VISUALIZAÇÃO (MUNDO -> TELA)
@@ -54,30 +64,41 @@ function deviceToWorld(dx, dy) {
 }
 
 // =========================================================================
-// == FUNÇÕES DE DESENHO DE PIXEL (LÓGICA DE COR IMPLEMENTADA AQUI)
+// == FUNÇÕES DE DESENHO DE PIXEL (LÓGICA DE COR E RECORTE)
 // =========================================================================
 
 /**
  * Desenha um pixel na tela a partir de uma coordenada do MUNDO.
- * Esta função agora chama setPixelDevice para centralizar a lógica de cor.
+ * AGORA INCLUI A LÓGICA DE RECORTE POR PIXEL.
  */
 function setPixelWorld(xw, yw) {
+  // LÓGICA DE RECORTE (Clipping)
+  // Se o modo de recorte estiver ativo, verifica se o pixel está fora da janela.
+  if (isClippingActive && clipObjects.window) {
+    if (
+      xw < clipObjects.window.xmin ||
+      xw > clipObjects.window.xmax ||
+      yw < clipObjects.window.ymin ||
+      yw > clipObjects.window.ymax
+    ) {
+      return; // Se estiver fora, simplesmente não desenha o ponto.
+    }
+  }
+
+  // Lógica original do pipeline de visualização
   const ndcPoint = worldToNDC(xw, yw);
   const devicePoint = ndcToDevice(ndcPoint.x, ndcPoint.y);
-  // Chama a função de pixel de dispositivo, que contém a lógica de cor.
   setPixelDevice(devicePoint.x, devicePoint.y);
 }
 
 /**
- * **FUNÇÃO ATUALIZADA**
  * Desenha um pixel na tela a partir de uma coordenada de DISPOSITIVO.
- * AGORA, ela verifica se o pixel está dentro ou fora da viewport para mudar a cor.
+ * Colore o pixel com base na sua posição em relação à viewport.
  */
 function setPixelDevice(dx, dy) {
   let cor = "red"; // Cor padrão para dentro da viewport
   const useViewport = document.getElementById("viewport_toggle").checked;
 
-  // Se a viewport estiver ativa, verificamos a posição do pixel
   if (useViewport) {
     if (
       dx < viewport.xvmin ||
@@ -85,17 +106,16 @@ function setPixelDevice(dx, dy) {
       dy < viewport.yvmin ||
       dy > viewport.yvmax
     ) {
-      cor = "blue"; // Um tom de azul para a parte de fora
+      cor = "blue"; // Cor para fora da viewport
     }
   }
 
-  // Ignora pixels fora do canvas para evitar erros
   if (dx < 0 || dx >= canvas.width || dy < 0 || dy >= canvas.height) {
     return;
   }
 
   ctx.fillStyle = cor;
-  ctx.fillRect(Math.round(dx), Math.round(dy), 1, 1); // Mantém a largura do pixel
+  ctx.fillRect(Math.round(dx), Math.round(dy), 1, 1);
 }
 
 // =========================================================================
@@ -176,20 +196,20 @@ function LineDDA(xw0, yw0, xw1, yw1) {
   let dx_device = p1_device.x - p0_device.x;
   let dy_device = p1_device.y - p0_device.y;
   const steps = Math.max(Math.abs(dx_device), Math.abs(dy_device));
-  const xInc_device = dx_device / steps;
-  const yInc_device = dy_device / steps;
+
+  if (steps === 0) {
+    setPixelWorld(xw0, yw0);
+    return;
+  }
+
   const xInc_world = (xw1 - xw0) / steps;
   const yInc_world = (yw1 - yw0) / steps;
-  let x_device = p0_device.x;
-  let y_device = p0_device.y;
   let x_world = xw0;
   let y_world = yw0;
 
   for (let i = 0; i <= steps; i++) {
-    setPixelDevice(x_device, y_device);
+    setPixelWorld(x_world, y_world);
     logIteration(x_world, y_world, null, i);
-    x_device += xInc_device;
-    y_device += yInc_device;
     x_world += xInc_world;
     y_world += yInc_world;
   }
@@ -207,55 +227,42 @@ function LineBresenham(xw0, yw0, xw1, yw1) {
   const dy = Math.abs(y_end - y);
   const sx = x < x_end ? 1 : -1;
   const sy = y < y_end ? 1 : -1;
-  const isSteep = dy > dx;
 
-  if (isSteep) {
-    let d = 2 * dx - dy;
-    let incE = 2 * dx;
-    let incNE = 2 * (dx - dy);
-    setPixelDevice(x, y);
-    logIteration(deviceToWorld(x, y).x, deviceToWorld(x, y).y, "start", 0);
+  // A função plot converte a coordenada de dispositivo de volta para mundo
+  // para que setPixelWorld possa aplicar a lógica de recorte.
+  const plot = (px, py) => {
+    const worldCoords = deviceToWorld(px, py);
+    setPixelWorld(worldCoords.x, worldCoords.y);
+  };
+
+  if (dy > dx) {
+    // octantes 2, 3, 6, 7
+    let err = dx - dy / 2;
     while (y !== y_end) {
-      let d_for_log = d;
-      y += sy;
-      if (d <= 0) {
-        d += incE;
-      } else {
+      plot(x, y);
+      if (err >= 0) {
         x += sx;
-        d += incNE;
+        err -= dy;
       }
-      setPixelDevice(x, y);
-      logIteration(
-        deviceToWorld(x, y).x,
-        deviceToWorld(x, y).y,
-        d_for_log,
-        null
-      );
+      y += sy;
+      err += dx;
+      logIteration(deviceToWorld(x, y).x, deviceToWorld(x, y).y, err, null);
     }
   } else {
-    let d = 2 * dy - dx;
-    let incE = 2 * dy;
-    let incNE = 2 * (dy - dx);
-    setPixelDevice(x, y);
-    logIteration(deviceToWorld(x, y).x, deviceToWorld(x, y).y, "start", 0);
+    // octantes 1, 4, 5, 8
+    let err = dy - dx / 2;
     while (x !== x_end) {
-      let d_for_log = d;
-      x += sx;
-      if (d <= 0) {
-        d += incE;
-      } else {
+      plot(x, y);
+      if (err >= 0) {
         y += sy;
-        d += incNE;
+        err -= dx;
       }
-      setPixelDevice(x, y);
-      logIteration(
-        deviceToWorld(x, y).x,
-        deviceToWorld(x, y).y,
-        d_for_log,
-        null
-      );
+      x += sx;
+      err += dy;
+      logIteration(deviceToWorld(x, y).x, deviceToWorld(x, y).y, err, null);
     }
   }
+  plot(x, y); // Garante que o último ponto seja desenhado.
 }
 
 function CircleMidpoint(cx, cy, radius) {
@@ -355,8 +362,6 @@ function EllipseMidpoint(cx, cy, rx, ry) {
   }
 }
 
-// ... (Resto do código, como as funções de UI e transformações, permanece inalterado)
-
 const getPoint = (id) => {
   const val = document.getElementById(id).value.trim();
   const match = val.match(/\(?\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*\)?/);
@@ -387,7 +392,6 @@ function drawFigure() {
   if (figure === "line" || figure === "circle" || figure === "ellipse") {
     document.getElementById("bresenhamParams").style.display = "block";
   }
-
   if (figure === "line") {
     const alg = document.getElementById("lineAlgorithm").value;
     const x0 = parseInt(document.getElementById("x1").value),
@@ -605,6 +609,103 @@ function logIteration(x, y, d = null, k = null) {
 function clearLog() {
   document.getElementById("iterationLog").innerHTML = "";
 }
+
+// =========================================================================
+// == CÓDIGO PARA RECORTE (LÓGICA POR PIXEL)
+// =========================================================================
+
+/**
+ * Desenha um retângulo de pré-visualização no canvas.
+ */
+function drawWorldRect(xmin, ymin, xmax, ymax, color) {
+  const p_bl = ndcToDevice(worldToNDC(xmin, ymin).x, worldToNDC(xmin, ymin).y);
+  const p_tr = ndcToDevice(worldToNDC(xmax, ymax).x, worldToNDC(xmax, ymax).y);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(p_bl.x, p_tr.y, p_tr.x - p_bl.x, p_bl.y - p_tr.y);
+}
+
+/**
+ * Redesenha a cena da aba de recorte para pré-visualização.
+ */
+function redrawClippingScene() {
+  clearCanvasAndDrawBase();
+  // Desenha a janela de recorte se ela estiver definida
+  if (clipObjects.window) {
+    drawWorldRect(
+      clipObjects.window.xmin,
+      clipObjects.window.ymin,
+      clipObjects.window.xmax,
+      clipObjects.window.ymax,
+      "blue"
+    );
+  }
+  // Desenha a linha completa se ela estiver definida
+  if (clipObjects.line) {
+    LineDDA(
+      // Usando DDA para a pré-visualização
+      clipObjects.line.x1,
+      clipObjects.line.y1,
+      clipObjects.line.x2,
+      clipObjects.line.y2
+    );
+  }
+}
+
+/**
+ * Define a reta para o recorte e mostra a pré-visualização.
+ */
+function drawLineForClipping() {
+  isClippingActive = false; // Desativa o recorte para a pré-visualização
+  clipObjects.line = {
+    x1: parseFloat(document.getElementById("csLineX1").value),
+    y1: parseFloat(document.getElementById("csLineY1").value),
+    x2: parseFloat(document.getElementById("csLineX2").value),
+    y2: parseFloat(document.getElementById("csLineY2").value),
+  };
+  redrawClippingScene();
+}
+
+/**
+ * Define a janela para o recorte e mostra a pré-visualização.
+ */
+function drawWindowForClipping() {
+  isClippingActive = false; // Desativa o recorte para a pré-visualização
+  clipObjects.window = {
+    xmin: parseFloat(document.getElementById("clipWinXmin").value),
+    ymin: parseFloat(document.getElementById("clipWinYmin").value),
+    xmax: parseFloat(document.getElementById("clipWinXmax").value),
+    ymax: parseFloat(document.getElementById("clipWinYmax").value),
+  };
+  redrawClippingScene();
+}
+
+/**
+ * Ativa o modo de recorte e redesenha a cena.
+ * A lógica em setPixelWorld fará o recorte automaticamente.
+ */
+function applyClipping() {
+  if (!clipObjects.line || !clipObjects.window) {
+    alert("Defina os parâmetros da reta e da janela primeiro.");
+    return;
+  }
+  isClippingActive = true; // ATIVA O RECORTE
+  redrawClippingScene(); // Redesenha a cena, agora com o recorte ativo.
+}
+
+/**
+ * Limpa a área de recorte, desativa o modo de recorte e limpa os dados.
+ */
+function clearClippingView() {
+  isClippingActive = false; // Desativa o recorte
+  clipObjects.line = null;
+  clipObjects.window = null;
+  clearCanvasAndDrawBase();
+}
+
+// =========================================================================
+// == INICIALIZAÇÃO
+// =========================================================================
 
 window.onload = function () {
   changeFigure();
