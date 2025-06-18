@@ -355,7 +355,7 @@ function changeFigure() {
     "ellipseParams",
     "cubeParams",
     "quadParams",
-    "lenaParams",
+    "img-pgmParams",
   ].forEach((id) => {
     document.getElementById(id).style.display = "none";
   });
@@ -396,7 +396,7 @@ function drawFigure() {
     EllipseMidpoint(cx, cy, rx, ry);
   } else if (figure === "cube" || figure === "quad") {
     drawSquare();
-  } else if (figure === "lena") {
+  } else if (figure === "img-pgm") {
     loadAndDrawPGM();
   }
 }
@@ -438,7 +438,7 @@ function redrawPolygon() {
   if (!squarePoints || squarePoints.length === 0) return;
   const figure = document.getElementById("figureSelect").value;
 
-  if (figure === "lena") {
+  if (figure === "img-pgm") {
     for (let i = 0; i < squarePoints.length; i++) {
       setPixelWorld(squarePoints[i][0], squarePoints[i][1]);
     }
