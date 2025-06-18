@@ -208,6 +208,7 @@
                   <option value="ellipse">Elipse</option>
                   <option value="cube">Quadrado</option>
                   <option value="quad">Quadrilátero</option>
+                  <option value="lena">Lena (PGM)</option>
                 </select>
               </div>
 
@@ -399,6 +400,32 @@
                   <div class="col-6">
                     <label class="form-label">D (x,y):</label
                     ><input class="form-control" id="D" value="(-150,100)" />
+                  </div>
+                </div>
+                <button
+                  class="btn btn-primary w-100 mb-3"
+                  onclick="drawFigure()"
+                >
+                  Desenhar Figura
+                </button>
+              </div>
+
+              <div id="lenaParams" style="display: none">
+                <div class="row g-2 mb-2">
+                  <div class="col-12">
+                    <label for="pgmFile" class="form-label"
+                      >Carregar imagem .pgm (P2 ou P5):</label
+                    >
+                    <input
+                      class="form-control"
+                      type="file"
+                      id="pgmFile"
+                      accept=".pgm"
+                    />
+                    <div class="form-text">
+                      A imagem será centralizada e os pixels escuros (valor &lt;
+                      250) serão desenhados.
+                    </div>
                   </div>
                 </div>
                 <button

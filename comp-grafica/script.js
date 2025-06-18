@@ -1,6 +1,6 @@
 /**
  * @file script.js
- * @description Implementação de algoritmos de Computação Gráfica
+ * @description Implementação de algoritmos de Computação Gráfica com suporte a PGM Binário (P5) e ASCII (P2).
  * @author UEPB - Danilo Pedro da Silva Valério, Laura Barbosa Vasconcelos
  */
 
@@ -11,21 +11,11 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-// Objeto para armazenar as coordenadas da janela de visualização no mundo.
 let world = {};
-
-// Objeto para armazenar as coordenadas da viewport no dispositivo.
 let viewport = {};
-
-// Array para armazenar os vértices de um polígono (em coordenadas do mundo)
 let squarePoints = [];
 
-// =========================================================================
-// == CÓDIGO PARA RECORTE (variáveis globais)
-// =========================================================================
-// Flag para indicar se o modo de recorte por pixel está ativo
 let isClippingActive = false;
-// Objeto para guardar os dados da reta e da janela de recorte
 let clipObjects = {
   line: null,
   window: null,
@@ -47,7 +37,7 @@ function ndcToDevice(ndcX, ndcY) {
     ? viewport
     : { xvmin: 0, yvmin: 0, xvmax: canvas.width, yvmax: canvas.height };
   const deviceX = ((ndcX + 1) / 2) * (vp.xvmax - vp.xvmin) + vp.xvmin;
-  const deviceY = ((1 - ndcY) / 2) * (vp.yvmax - vp.yvmin) + vp.yvmin; // Inversão do eixo Y
+  const deviceY = ((1 - ndcY) / 2) * (vp.yvmax - vp.yvmin) + vp.yvmin;
   return { x: deviceX, y: deviceY };
 }
 
@@ -64,16 +54,10 @@ function deviceToWorld(dx, dy) {
 }
 
 // =========================================================================
-// == FUNÇÕES DE DESENHO DE PIXEL (LÓGICA DE COR E RECORTE)
+// == FUNÇÕES DE DESENHO DE PIXEL
 // =========================================================================
 
-/**
- * Desenha um pixel na tela a partir de uma coordenada do MUNDO.
- * AGORA INCLUI A LÓGICA DE RECORTE POR PIXEL.
- */
 function setPixelWorld(xw, yw) {
-  // LÓGICA DE RECORTE (Clipping)
-  // Se o modo de recorte estiver ativo, verifica se o pixel está fora da janela.
   if (isClippingActive && clipObjects.window) {
     if (
       xw < clipObjects.window.xmin ||
@@ -81,22 +65,16 @@ function setPixelWorld(xw, yw) {
       yw < clipObjects.window.ymin ||
       yw > clipObjects.window.ymax
     ) {
-      return; // Se estiver fora, simplesmente não desenha o ponto.
+      return;
     }
   }
-
-  // Lógica original do pipeline de visualização
   const ndcPoint = worldToNDC(xw, yw);
   const devicePoint = ndcToDevice(ndcPoint.x, ndcPoint.y);
   setPixelDevice(devicePoint.x, devicePoint.y);
 }
 
-/**
- * Desenha um pixel na tela a partir de uma coordenada de DISPOSITIVO.
- * Colore o pixel com base na sua posição em relação à viewport.
- */
 function setPixelDevice(dx, dy) {
-  let cor = "red"; // Cor padrão para dentro da viewport
+  let cor = "red";
   const useViewport = document.getElementById("viewport_toggle").checked;
 
   if (useViewport) {
@@ -106,7 +84,7 @@ function setPixelDevice(dx, dy) {
       dy < viewport.yvmin ||
       dy > viewport.yvmax
     ) {
-      cor = "blue"; // Cor para fora da viewport
+      cor = "blue";
     }
   }
 
@@ -188,7 +166,6 @@ function clearCanvasAndDrawBase() {
 // =========================================================================
 // == ALGORITMOS DE RASTERIZAÇÃO DE PRIMITIVAS
 // =========================================================================
-
 function LineDDA(xw0, yw0, xw1, yw1) {
   clearLog();
   const p0_device = ndcToDevice(worldToNDC(xw0, yw0).x, worldToNDC(xw0, yw0).y);
@@ -228,15 +205,12 @@ function LineBresenham(xw0, yw0, xw1, yw1) {
   const sx = x < x_end ? 1 : -1;
   const sy = y < y_end ? 1 : -1;
 
-  // A função plot converte a coordenada de dispositivo de volta para mundo
-  // para que setPixelWorld possa aplicar a lógica de recorte.
   const plot = (px, py) => {
     const worldCoords = deviceToWorld(px, py);
     setPixelWorld(worldCoords.x, worldCoords.y);
   };
 
   if (dy > dx) {
-    // octantes 2, 3, 6, 7
     let err = dx - dy / 2;
     while (y !== y_end) {
       plot(x, y);
@@ -249,7 +223,6 @@ function LineBresenham(xw0, yw0, xw1, yw1) {
       logIteration(deviceToWorld(x, y).x, deviceToWorld(x, y).y, err, null);
     }
   } else {
-    // octantes 1, 4, 5, 8
     let err = dy - dx / 2;
     while (x !== x_end) {
       plot(x, y);
@@ -262,7 +235,7 @@ function LineBresenham(xw0, yw0, xw1, yw1) {
       logIteration(deviceToWorld(x, y).x, deviceToWorld(x, y).y, err, null);
     }
   }
-  plot(x, y); // Garante que o último ponto seja desenhado.
+  plot(x, y);
 }
 
 function CircleMidpoint(cx, cy, radius) {
@@ -362,6 +335,9 @@ function EllipseMidpoint(cx, cy, rx, ry) {
   }
 }
 
+// =========================================================================
+// == LÓGICA DE CONTROLE DA INTERFACE (UI)
+// =========================================================================
 const getPoint = (id) => {
   const val = document.getElementById(id).value.trim();
   const match = val.match(/\(?\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*\)?/);
@@ -379,6 +355,7 @@ function changeFigure() {
     "ellipseParams",
     "cubeParams",
     "quadParams",
+    "lenaParams",
   ].forEach((id) => {
     document.getElementById(id).style.display = "none";
   });
@@ -389,9 +366,12 @@ function changeFigure() {
 function drawFigure() {
   clearCanvasAndDrawBase();
   const figure = document.getElementById("figureSelect").value;
+  document.getElementById("bresenhamParams").style.display = "none";
+
   if (figure === "line" || figure === "circle" || figure === "ellipse") {
     document.getElementById("bresenhamParams").style.display = "block";
   }
+
   if (figure === "line") {
     const alg = document.getElementById("lineAlgorithm").value;
     const x0 = parseInt(document.getElementById("x1").value),
@@ -416,6 +396,8 @@ function drawFigure() {
     EllipseMidpoint(cx, cy, rx, ry);
   } else if (figure === "cube" || figure === "quad") {
     drawSquare();
+  } else if (figure === "lena") {
+    loadAndDrawPGM();
   }
 }
 
@@ -449,23 +431,33 @@ function drawSquare() {
   }
   squarePoints = points;
   redrawPolygon();
-  document.getElementById("iterationLog").style.display = "none";
 }
 
 function redrawPolygon() {
   clearCanvasAndDrawBase();
   if (!squarePoints || squarePoints.length === 0) return;
-  for (let i = 0; i < squarePoints.length; i++) {
-    const next = (i + 1) % squarePoints.length;
-    LineBresenham(
-      squarePoints[i][0],
-      squarePoints[i][1],
-      squarePoints[next][0],
-      squarePoints[next][1]
-    );
+  const figure = document.getElementById("figureSelect").value;
+
+  if (figure === "lena") {
+    for (let i = 0; i < squarePoints.length; i++) {
+      setPixelWorld(squarePoints[i][0], squarePoints[i][1]);
+    }
+  } else {
+    for (let i = 0; i < squarePoints.length; i++) {
+      const next = (i + 1) % squarePoints.length;
+      LineBresenham(
+        squarePoints[i][0],
+        squarePoints[i][1],
+        squarePoints[next][0],
+        squarePoints[next][1]
+      );
+    }
   }
 }
 
+// =========================================================================
+// == TRANSFORMAÇÕES 2D
+// =========================================================================
 function translateSquare() {
   const tx = parseFloat(document.getElementById("tx").value);
   const ty = parseFloat(document.getElementById("ty").value);
@@ -554,6 +546,204 @@ function animacaoRotacao(btn) {
   }
 }
 
+// =========================================================================
+// == CÓDIGO PARA RECORTE (Clipping)
+// =========================================================================
+function drawWorldRect(xmin, ymin, xmax, ymax, color) {
+  const p_bl = ndcToDevice(worldToNDC(xmin, ymin).x, worldToNDC(xmin, ymin).y);
+  const p_tr = ndcToDevice(worldToNDC(xmax, ymax).x, worldToNDC(xmax, ymax).y);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(p_bl.x, p_tr.y, p_tr.x - p_bl.x, p_bl.y - p_tr.y);
+}
+
+function redrawClippingScene() {
+  clearCanvasAndDrawBase();
+  if (clipObjects.window) {
+    drawWorldRect(
+      clipObjects.window.xmin,
+      clipObjects.window.ymin,
+      clipObjects.window.xmax,
+      clipObjects.window.ymax,
+      "blue"
+    );
+  }
+  if (clipObjects.line) {
+    LineDDA(
+      clipObjects.line.x1,
+      clipObjects.line.y1,
+      clipObjects.line.x2,
+      clipObjects.line.y2
+    );
+  }
+}
+
+function drawLineForClipping() {
+  isClippingActive = false;
+  clipObjects.line = {
+    x1: parseFloat(document.getElementById("csLineX1").value),
+    y1: parseFloat(document.getElementById("csLineY1").value),
+    x2: parseFloat(document.getElementById("csLineX2").value),
+    y2: parseFloat(document.getElementById("csLineY2").value),
+  };
+  redrawClippingScene();
+}
+
+function drawWindowForClipping() {
+  isClippingActive = false;
+  clipObjects.window = {
+    xmin: parseFloat(document.getElementById("clipWinXmin").value),
+    ymin: parseFloat(document.getElementById("clipWinYmin").value),
+    xmax: parseFloat(document.getElementById("clipWinXmax").value),
+    ymax: parseFloat(document.getElementById("clipWinYmax").value),
+  };
+  redrawClippingScene();
+}
+
+function applyClipping() {
+  if (!clipObjects.line || !clipObjects.window) {
+    alert("Defina os parâmetros da reta e da janela primeiro.");
+    return;
+  }
+  isClippingActive = true;
+  redrawClippingScene();
+}
+
+function clearClippingView() {
+  isClippingActive = false;
+  clipObjects.line = null;
+  clipObjects.window = null;
+  clearCanvasAndDrawBase();
+}
+
+// =========================================================================
+// == CÓDIGO PARA CARREGAMENTO DE IMAGEM PGM (UNIVERSAL P2/P5)
+// =========================================================================
+
+/**
+ * Interpreta o conteúdo binário de um arquivo PGM, suportando P2 (ASCII) e P5 (Binário).
+ * @param {ArrayBuffer} arrayBuffer O conteúdo binário do arquivo.
+ * @returns {object} Um objeto com { width, height, pixels } ou null se falhar.
+ */
+function parsePGM(arrayBuffer) {
+  const view = new Uint8Array(arrayBuffer);
+  let currentIndex = 0;
+
+  function readToken() {
+    let token = "";
+    while (currentIndex < view.length) {
+      const charCode = view[currentIndex];
+      if (/\s/.test(String.fromCharCode(charCode))) {
+        // É um espaço em branco
+        if (token.length > 0) {
+          currentIndex++;
+          return token;
+        }
+      } else if (String.fromCharCode(charCode) === "#") {
+        // É um comentário
+        while (
+          currentIndex < view.length &&
+          String.fromCharCode(view[currentIndex]) !== "\n"
+        ) {
+          currentIndex++;
+        }
+      } else {
+        token += String.fromCharCode(charCode);
+      }
+      currentIndex++;
+    }
+    return token;
+  }
+
+  const magic = readToken();
+  if (magic !== "P2" && magic !== "P5") {
+    alert(
+      "Erro: Formato de arquivo PGM inválido ou não suportado. Esperado 'P2' ou 'P5'."
+    );
+    return null;
+  }
+
+  const width = parseInt(readToken());
+  const height = parseInt(readToken());
+  const maxVal = parseInt(readToken());
+
+  if (isNaN(width) || isNaN(height) || isNaN(maxVal)) {
+    alert("Erro ao ler o cabeçalho do PGM (largura, altura ou valor máximo).");
+    return null;
+  }
+
+  let pixels;
+  if (magic === "P5") {
+    // Formato Binário
+    pixels = view.subarray(currentIndex);
+  } else {
+    // Formato ASCII 'P2'
+    const textDecoder = new TextDecoder();
+    const remainingText = textDecoder.decode(view.subarray(currentIndex));
+    pixels = remainingText
+      .split(/\s+/)
+      .filter((s) => s)
+      .map((s) => parseInt(s));
+  }
+
+  if (pixels.length < width * height) {
+    alert(
+      `Erro: O arquivo PGM está incompleto. Esperava ${
+        width * height
+      } pixels, mas encontrou ${pixels.length}.`
+    );
+    return null;
+  }
+
+  // Pega a quantidade exata de pixels para evitar lixo no final do arquivo
+  pixels = pixels.slice(0, width * height);
+
+  return { width, height, pixels };
+}
+
+/**
+ * Carrega o arquivo PGM, o interpreta (P2 ou P5) e armazena os pixels.
+ */
+function loadAndDrawPGM() {
+  const fileInput = document.getElementById("pgmFile");
+  if (fileInput.files.length === 0) {
+    alert("Por favor, selecione um arquivo PGM primeiro.");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    const pgmData = parsePGM(e.target.result);
+    if (!pgmData) return;
+
+    squarePoints = [];
+    const { width, height, pixels } = pgmData;
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
+
+    for (let i = 0; i < pixels.length; i++) {
+      if (pixels[i] < 250) {
+        const x = i % width;
+        const y = Math.floor(i / width);
+        squarePoints.push([x - halfWidth, -(y - halfHeight), 1]);
+      }
+    }
+    redrawPolygon();
+  };
+
+  reader.onerror = function () {
+    alert("Ocorreu um erro ao ler o arquivo.");
+  };
+
+  // Lê o arquivo como um bloco de dados binários, que funciona para ambos P2 e P5.
+  reader.readAsArrayBuffer(file);
+}
+
+// =========================================================================
+// == FUNÇÕES AUXILIARES E DE INICIALIZAÇÃO
+// =========================================================================
 function setupMouseCoordsTracker() {
   const mouseCoordsElement = document.getElementById("mouseCoords");
   canvas.addEventListener("mousemove", (event) => {
@@ -601,7 +791,7 @@ function logIteration(x, y, d = null, k = null) {
   const tbody = logContainer.querySelector("tbody");
   const row = document.createElement("tr");
   row.innerHTML = `<td>${
-    d !== null && typeof d === "number" ? Math.round(d) : d
+    d !== null && typeof d === "number" ? Math.round(d) : k
   }</td><td>${Math.round(x)}</td><td>${Math.round(y)}</td>`;
   tbody.appendChild(row);
 }
@@ -611,102 +801,8 @@ function clearLog() {
 }
 
 // =========================================================================
-// == CÓDIGO PARA RECORTE (LÓGICA POR PIXEL)
-// =========================================================================
-
-/**
- * Desenha um retângulo de pré-visualização no canvas.
- */
-function drawWorldRect(xmin, ymin, xmax, ymax, color) {
-  const p_bl = ndcToDevice(worldToNDC(xmin, ymin).x, worldToNDC(xmin, ymin).y);
-  const p_tr = ndcToDevice(worldToNDC(xmax, ymax).x, worldToNDC(xmax, ymax).y);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1;
-  ctx.strokeRect(p_bl.x, p_tr.y, p_tr.x - p_bl.x, p_bl.y - p_tr.y);
-}
-
-/**
- * Redesenha a cena da aba de recorte para pré-visualização.
- */
-function redrawClippingScene() {
-  clearCanvasAndDrawBase();
-  // Desenha a janela de recorte se ela estiver definida
-  if (clipObjects.window) {
-    drawWorldRect(
-      clipObjects.window.xmin,
-      clipObjects.window.ymin,
-      clipObjects.window.xmax,
-      clipObjects.window.ymax,
-      "blue"
-    );
-  }
-  // Desenha a linha completa se ela estiver definida
-  if (clipObjects.line) {
-    LineDDA(
-      // Usando DDA para a pré-visualização
-      clipObjects.line.x1,
-      clipObjects.line.y1,
-      clipObjects.line.x2,
-      clipObjects.line.y2
-    );
-  }
-}
-
-/**
- * Define a reta para o recorte e mostra a pré-visualização.
- */
-function drawLineForClipping() {
-  isClippingActive = false; // Desativa o recorte para a pré-visualização
-  clipObjects.line = {
-    x1: parseFloat(document.getElementById("csLineX1").value),
-    y1: parseFloat(document.getElementById("csLineY1").value),
-    x2: parseFloat(document.getElementById("csLineX2").value),
-    y2: parseFloat(document.getElementById("csLineY2").value),
-  };
-  redrawClippingScene();
-}
-
-/**
- * Define a janela para o recorte e mostra a pré-visualização.
- */
-function drawWindowForClipping() {
-  isClippingActive = false; // Desativa o recorte para a pré-visualização
-  clipObjects.window = {
-    xmin: parseFloat(document.getElementById("clipWinXmin").value),
-    ymin: parseFloat(document.getElementById("clipWinYmin").value),
-    xmax: parseFloat(document.getElementById("clipWinXmax").value),
-    ymax: parseFloat(document.getElementById("clipWinYmax").value),
-  };
-  redrawClippingScene();
-}
-
-/**
- * Ativa o modo de recorte e redesenha a cena.
- * A lógica em setPixelWorld fará o recorte automaticamente.
- */
-function applyClipping() {
-  if (!clipObjects.line || !clipObjects.window) {
-    alert("Defina os parâmetros da reta e da janela primeiro.");
-    return;
-  }
-  isClippingActive = true; // ATIVA O RECORTE
-  redrawClippingScene(); // Redesenha a cena, agora com o recorte ativo.
-}
-
-/**
- * Limpa a área de recorte, desativa o modo de recorte e limpa os dados.
- */
-function clearClippingView() {
-  isClippingActive = false; // Desativa o recorte
-  clipObjects.line = null;
-  clipObjects.window = null;
-  clearCanvasAndDrawBase();
-}
-
-// =========================================================================
 // == INICIALIZAÇÃO
 // =========================================================================
-
 window.onload = function () {
   changeFigure();
   changeTransformer();
