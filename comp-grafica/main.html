@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
-    <title>Laboratório de Computação Gráfica</title>
+    <title>Laboratório de Computação Gráfica - 2D</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -601,7 +601,7 @@
       >
         <h2 class="fs-5">
           Transformações 2D <br /><span class="fs-6 text-muted"
-            >(Polígono Ativo)</span
+            >(Figura Ativa)</span
           >
         </h2>
         <select
@@ -620,27 +620,27 @@
           ><input class="w-75" type="number" id="tx" value="10" /> <br />
           <label class="mt-3">ty:</label
           ><input class="w-75" type="number" id="ty" value="10" />
-          <button class="mt-3" onclick="translateSquare()">Aplicar</button>
+          <button class="mt-3" onclick="applyTranslation()">Aplicar</button>
         </div>
         <div id="escala" style="display: none">
           <label class="mt-3">sx:</label
           ><input class="w-75" id="sx" value="1.2" /> <br />
           <label class="mt-3">sy:</label
           ><input class="w-75" id="sy" value="1.2" />
-          <button onclick="scale()">Aplicar</button>
+          <button onclick="applyScale()">Aplicar</button>
         </div>
         <div id="rotacao" style="display: none">
           <div class="d-flex justify-content-evenly align-items-center mt-3">
             <label>θ:</label
             ><input class="w-75" type="number" id="ang" value="15" />
           </div>
-          <button onclick="rotateSquare()">Aplicar</button>
+          <button onclick="applyRotation()">Aplicar</button>
           <button onclick="animacaoRotacao(this)">Animação</button>
         </div>
         <div id="reflexao" style="display: none">
           <label>Em:</label>
-          <button onclick="reflectSquare('x')">Reflexão em X</button>
-          <button onclick="reflectSquare('y')">Reflexão em Y</button>
+          <button onclick="applyReflection('x')">Reflexão em X</button>
+          <button onclick="applyReflection('y')">Reflexão em Y</button>
         </div>
         <div id="cisalhamento" style="display: none">
           <label class="mt-3">shx (a):</label
@@ -658,6 +658,15 @@
           </select>
           <button onclick="applyShear()">Aplicar</button>
         </div>
+        
+        <h2 class="fs-6 mt-4">Histórico 2D</h2>
+          <div
+            id="historyLog2D"
+            class="bg-light p-2 rounded text-dark"
+            style="height: 200px; width: 190px; overflow-y: auto; font-size: 0.8em; margin: 0 auto;"
+          >
+          </div>
+
       </div>
     </div>
 
