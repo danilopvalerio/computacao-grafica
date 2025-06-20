@@ -441,6 +441,7 @@ function redrawPolygon() {
   if (figure === "img-pgm") {
     for (let i = 0; i < squarePoints.length; i++) {
       setPixelWorld(squarePoints[i][0], squarePoints[i][1]);
+      
     }
   } else {
     for (let i = 0; i < squarePoints.length; i++) {
