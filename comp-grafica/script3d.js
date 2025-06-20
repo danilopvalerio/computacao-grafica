@@ -183,11 +183,110 @@ function transposeMatrix(matrix) {
   return result;
 }
 
+
+/**
+ * Calcula o centro geométrico de um conjunto de pontos 3D
+ * @param {Array} points - Array de pontos no formato [x, y, z, w]
+ * @returns {Array} Coordenadas [x, y, z] do centro
+ */
+function getObjectCenter(points) {
+  if (!points || points.length === 0) return [0, 0, 0];
+  
+  let sumX = 0, sumY = 0, sumZ = 0;
+  for (const p of points) {
+    sumX += p[0];
+    sumY += p[1];
+    sumZ += p[2];
+  }
+  
+  return [
+    sumX / points.length,
+    sumY / points.length,
+    sumZ / points.length
+  ];
+}
+
+function applyTransformationWithPivot(points, transformationMatrix, pivot = [0, 0, 0]) {
+  if (!points) return points;
+  
+  const [px, py, pz] = pivot;
+  
+  // Matriz de translação para a origem
+  const translateToOrigin = [
+    [1, 0, 0, -px],
+    [0, 1, 0, -py],
+    [0, 0, 1, -pz],
+    [0, 0, 0, 1]
+  ];
+  
+  // Matriz de translação de volta
+  const translateBack = [
+    [1, 0, 0, px],
+    [0, 1, 0, py],
+    [0, 0, 1, pz],
+    [0, 0, 0, 1]
+  ];
+  
+  // Combinar transformações: T⁻¹ * M * T
+  const transform = multiplyMatrices(translateBack, multiplyMatrices(transformationMatrix, translateToOrigin));
+  
+  return points.map(point => multiplyMatrixVector(transform, point));
+}
+
+// Modificar a função applyRotation3D
+function applyRotation3D() {
+  const angle = parseFloat(document.getElementById("ang3d").value);
+  const axis = document.getElementById("rotationAxis3D").value;
+  
+  let rotationMatrix;
+  switch (axis) {
+    case "x":
+      rotationMatrix = createRotationXMatrix(angle);
+      break;
+    case "y":
+      rotationMatrix = createRotationYMatrix(angle);
+      break;
+    case "z":
+      rotationMatrix = createRotationZMatrix(angle);
+      break;
+  }
+  
+  // Calcular centro do cubo
+  const center = getObjectCenter(cubePoints);
+  
+  // Aplicar rotação em torno do centro
+  cubePoints = applyTransformationWithPivot(cubePoints, rotationMatrix, center);
+  
+  drawScene();
+  addToHistory(`\nRotação: ${angle}° em torno do eixo ${axis.toUpperCase()}`);
+}
+
+// Modificar a função applyScale3D
+function applyScale3D() {
+  const sx = parseFloat(document.getElementById("sx3d").value);
+  const sy = parseFloat(document.getElementById("sy3d").value);
+  const sz = parseFloat(document.getElementById("sz3d").value);
+
+  const scaleMatrix = createScaleMatrix(sx, sy, sz);
+  
+  // Calcular centro do cubo
+  const center = getObjectCenter(cubePoints);
+  
+  // Aplicar escala em torno do centro
+  cubePoints = applyTransformationWithPivot(cubePoints, scaleMatrix, center);
+  
+  drawScene();
+  addToHistory(`\nEscala: sx=${sx}, sy=${sy}, sz=${sz}`);
+}
+
+
+
 /**
  * Aplica todas as transformações a um conjunto de pontos
  * @param {Array} points - Array de pontos em coordenadas homogêneas
  * @returns {Array} Pontos transformados
  */
+
 function applyTransformations(points) {
   // Criar matrizes de rotação individuais
   const rotX = createRotationXMatrix(rotationX);
