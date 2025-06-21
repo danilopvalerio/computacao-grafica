@@ -266,3 +266,18 @@ th {
   color: #dc3545;
   font-weight: bold;
 }
+
+
+#worldWindow {
+    border: 1px solid #ccc;
+    background-color: white;
+    margin-top: 10px;
+}
+
+.panel {
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}

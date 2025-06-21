@@ -4,6 +4,14 @@
 const canvas = document.getElementById("canvas3D");
 const ctx = canvas.getContext("2d");
 
+// Janela de coordenadas do mundo
+const worldWindow = document.getElementById("worldWindow");
+const worldWindowCtx = worldWindow.getContext("2d");
+let currentObject = "cube3d"; // Para controlar qual objeto está sendo exibido
+let objectVertices = []; // Vértices do objeto atual
+let objectEdges = []; // Arestas do objeto atual
+
+
 // Configurações de visualização
 let rotationX = 0; // Ângulo de rotação no eixo X (graus)
 let rotationY = 0; // Ângulo de rotação no eixo Y (graus)
@@ -401,58 +409,64 @@ function createCube(size) {
 /**
  * Desenha toda a cena 3D (eixos + figura selecionada)
  */
+/**
+ * Desenha toda a cena 3D (eixos + figura selecionada)
+ */
 function drawScene() {
-  // Limpar canvas
-  ctx.fillStyle = "white";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Limpar canvas
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Aplicar transformações e desenhar eixos
-  const transformedAxes = {
-    x: applyTransformations(axesPoints.x),
-    y: applyTransformations(axesPoints.y),
-    z: applyTransformations(axesPoints.z),
-  };
+    // Aplicar transformações e desenhar eixos
+    const transformedAxes = {
+        x: applyTransformations(axesPoints.x),
+        y: applyTransformations(axesPoints.y),
+        z: applyTransformations(axesPoints.z),
+    };
 
-  // Projetar e desenhar eixos
-  const origin = projectPoint(transformedAxes.x[0]);
+    // Projetar e desenhar eixos
+    const origin = projectPoint(transformedAxes.x[0]);
 
-  // Eixo X (vermelho)
-  const xEnd = projectPoint(transformedAxes.x[1]);
-  drawLineDDA(origin.x, origin.y, xEnd.x, xEnd.y, "red");
+    // Eixo X (vermelho)
+    const xEnd = projectPoint(transformedAxes.x[1]);
+    drawLineDDA(origin.x, origin.y, xEnd.x, xEnd.y, "red");
 
-  // Eixo Y (verde)
-  const yEnd = projectPoint(transformedAxes.y[1]);
-  drawLineDDA(origin.x, origin.y, yEnd.x, yEnd.y, "green");
+    // Eixo Y (verde)
+    const yEnd = projectPoint(transformedAxes.y[1]);
+    drawLineDDA(origin.x, origin.y, yEnd.x, yEnd.y, "green");
 
-  // Eixo Z (azul)
-  const zEnd = projectPoint(transformedAxes.z[1]);
-  drawLineDDA(origin.x, origin.y, zEnd.x, zEnd.y, "blue");
+    // Eixo Z (azul)
+    const zEnd = projectPoint(transformedAxes.z[1]);
+    drawLineDDA(origin.x, origin.y, zEnd.x, zEnd.y, "blue");
 
-  // Rótulos dos eixos
-  ctx.font = "12px Arial";
-  ctx.fillStyle = "red";
-  ctx.fillText("X", xEnd.x + 15, xEnd.y);
-  ctx.fillStyle = "green";
-  ctx.fillText("Y", yEnd.x, yEnd.y - 15);
-  ctx.fillStyle = "blue";
-  ctx.fillText("Z", zEnd.x - 15, zEnd.y);
+    // Rótulos dos eixos
+    ctx.font = "12px Arial";
+    ctx.fillStyle = "red";
+    ctx.fillText("X", xEnd.x + 15, xEnd.y);
+    ctx.fillStyle = "green";
+    ctx.fillText("Y", yEnd.x, yEnd.y - 15);
+    ctx.fillStyle = "blue";
+    ctx.fillText("Z", zEnd.x - 15, zEnd.y);
 
-  // Desenhar figura selecionada
-  const figureSelect = document.getElementById("figureSelect3D").value;
+    // Desenhar figura selecionada
+    const figureSelect = document.getElementById("figureSelect3D").value;
 
-  if (figureSelect === "line3d") {
-    // Desenhar linha 3D
-    const transformedLine = applyTransformations(linePoints);
-    const start = projectPoint(transformedLine[0]);
-    const end = projectPoint(transformedLine[1]);
-    drawLineDDA(start.x, start.y, end.x, end.y, "black");
-  } else if (figureSelect === "cube3d") {
-    // Desenhar cubo 3D
-    drawCube();
-  }
+    if (figureSelect === "line3d") {
+        // Desenhar linha 3D
+        const transformedLine = applyTransformations(linePoints);
+        const start = projectPoint(transformedLine[0]);
+        const end = projectPoint(transformedLine[1]);
+        drawLineDDA(start.x, start.y, end.x, end.y, "black");
+    } else if (figureSelect === "cube3d") {
+        // Desenhar cubo 3D
+        drawCube();
+    }
 
-  // Atualizar informações da figura
-  updateFigureInfo3D();
+    // Atualizar informações da figura
+    updateFigureInfo3D();
+    
+    // Desenhar a janela de coordenadas do mundo
+    drawInWorldWindow();
 }
 
 // ====================================================================================
@@ -1090,6 +1104,96 @@ function calculateCubeVolume() {
   );
 
   return volume;
+}
+
+function drawInWorldWindow() {
+    const size = 300;
+    worldWindowCtx.fillStyle = 'white';
+    worldWindowCtx.fillRect(0, 0, size, size);
+
+    // Atualiza os vértices e arestas do objeto atual
+    updateCurrentObjectData();
+
+    if (!currentObject) return;
+
+    // Define limites da janela do mundo (ajuste conforme necessário)
+    const xMin = -150, yMin = -150, xMax = 150, yMax = 150;
+
+    // Função auxiliar para mapear coordenadas do mundo para o canvas
+    function worldToCanvas(x, y) {
+        const cx = ((x - xMin) / (xMax - xMin)) * size;
+        const cy = size - ((y - yMin) / (yMax - yMin)) * size; // Inverte Y
+        return { x: cx, y: cy };
+    }
+
+    // Desenha eixos
+    const center = worldToCanvas(0, 0);
+
+    // eixo X (horizontal, vermelho)
+    drawLineDDAWorld(0, center.y, size, center.y, 'red');
+
+    // eixo Y (vertical, verde)
+    drawLineDDAWorld(center.x, 0, center.x, size, 'green');
+
+    // Desenha vértices e arestas
+    worldWindowCtx.strokeStyle = '#111';
+    worldWindowCtx.lineWidth = 2;
+    
+    for (const edge of objectEdges) {
+        const v1 = objectVertices[edge[0]];
+        const v2 = objectVertices[edge[1]];
+
+        // Projeta os pontos 3D para 2D (ignorando Z para esta visualização)
+        const p1 = worldToCanvas(v1[0], v1[1]);
+        const p2 = worldToCanvas(v2[0], v2[1]);
+
+        drawLineDDAWorld(p1.x, p1.y, p2.x, p2.y, '#111');
+    }
+
+    // Desenha pontos dos vértices
+    worldWindowCtx.fillStyle = 'blue';
+    for (const vertex of objectVertices) {
+        const p = worldToCanvas(vertex[0], vertex[1]);
+        worldWindowCtx.beginPath();
+        worldWindowCtx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        worldWindowCtx.fill();
+    }
+}
+
+// Versão do DDA para a world window
+function drawLineDDAWorld(x1, y1, x2, y2, color) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const steps = Math.max(Math.abs(dx), Math.abs(dy));
+
+    const xIncrement = dx / steps;
+    const yIncrement = dy / steps;
+
+    let x = x1;
+    let y = y1;
+
+    worldWindowCtx.fillStyle = color;
+    worldWindowCtx.fillRect(x, y, 1, 1);
+
+    for (let i = 0; i < steps; i++) {
+        x += xIncrement;
+        y += yIncrement;
+        worldWindowCtx.fillRect(Math.round(x), Math.round(y), 1, 1);
+    }
+}
+
+// Atualiza os dados do objeto atual
+function updateCurrentObjectData() {
+    const figureSelect = document.getElementById("figureSelect3D").value;
+    currentObject = figureSelect;
+
+    if (figureSelect === "cube3d") {
+        objectVertices = cubePoints.map(v => [v[0], v[1], v[2]]); // Extrai apenas x,y,z
+        objectEdges = cubeEdges;
+    } else if (figureSelect === "line3d") {
+        objectVertices = linePoints.map(v => [v[0], v[1], v[2]]);
+        objectEdges = [[0, 1]]; // Apenas uma aresta conectando os dois pontos
+    }
 }
 
 // ====================================================================================
